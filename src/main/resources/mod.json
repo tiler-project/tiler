@@ -1,0 +1,18 @@
+{
+  "main":"io.tiler.MainVerticle",
+
+  "description":"Plugable dashboard framework",
+  "licenses": ["MIT"],
+  "author": "Simon Dean",
+
+  "keywords": [
+    "dashboard",
+    "information",
+    "radiator",
+    "react",
+    "vert.x"
+  ],
+  "homepage": "https://github.com/tiler-project/tiler",
+
+  "auto-redeploy": true
+}
