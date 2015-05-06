@@ -47,7 +47,7 @@ public class ServerVerticle extends Verticle {
     HttpServer httpServer = vertx.createHttpServer();
 
     Yoke yoke = new Yoke(vertx);
-    yoke.engine(new StringPlaceholderEngine("io/squarely/vertxspike/views"));
+    yoke.engine(new StringPlaceholderEngine("views"));
     yoke.use(new Logger());
     yoke.use(new ErrorHandler(true));
     yoke.use(new Favicon());
