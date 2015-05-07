@@ -1,6 +1,4 @@
 {
-  "main":"io.tiler.ServerVerticle",
-
   "description":"Plugable dashboard framework",
   "licenses": ["MIT"],
   "author": "Simon Dean",
@@ -14,7 +12,6 @@
   ],
   "homepage": "https://github.com/tiler-project/tiler",
 
-  "preserve-cwd": true,
   "auto-redeploy": true,
   "includes": "io.vertx~mod-redis~1.1.4,io.vertx~mod-redis-client~1.1.4,com.jetdrone~yoke~2.0.17"
 }
