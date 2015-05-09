@@ -19,6 +19,7 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServer;
+import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.sockjs.SockJSServer;
@@ -211,12 +212,12 @@ public class ServerVerticle extends Verticle {
 
       checkForMissingMetrics(getQueriesThatMatchMetrics(metrics), metrics, missingMetricNames -> {
         if (missingMetricNames.failed()) {
-          handler.handle(AsyncResultImpl.fail(missingMetricNames.cause()));
+          handler.handle(new DefaultFutureResult(missingMetricNames.cause()));
         }
 
         getMetrics(missingMetricNames.result(), missingMetrics -> {
           if (missingMetrics.failed()) {
-            handler.handle(AsyncResultImpl.fail(missingMetrics.cause()));
+            handler.handle(new DefaultFutureResult(missingMetrics.cause()));
             return;
           }
 
@@ -246,7 +247,7 @@ public class ServerVerticle extends Verticle {
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(AsyncResultImpl.fail(new RedisException(body)));
+        handler.handle(new DefaultFutureResult(new RedisException(body)));
         return;
       }
 
@@ -271,7 +272,7 @@ public class ServerVerticle extends Verticle {
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(AsyncResultImpl.fail(new RedisException(body)));
+        handler.handle(new DefaultFutureResult(new RedisException(body)));
         return;
       }
 
@@ -369,7 +370,7 @@ public class ServerVerticle extends Verticle {
   private void getMetricsForQueries(Collection<Query> queries, AsyncResultHandler<JsonArray> handler) {
     getMetricNames(metricNames -> {
       if (metricNames.failed()) {
-        handler.handle(AsyncResultImpl.fail(metricNames.cause()));
+        handler.handle(new DefaultFutureResult(metricNames.cause()));
         return;
       }
 
@@ -394,7 +395,7 @@ public class ServerVerticle extends Verticle {
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(AsyncResultImpl.fail(new RedisException(body)));
+        handler.handle(new DefaultFutureResult(new RedisException(body)));
         return;
       }
 
@@ -426,7 +427,7 @@ public class ServerVerticle extends Verticle {
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(AsyncResultImpl.fail(new RedisException(body)));
+        handler.handle(new DefaultFutureResult(new RedisException(body)));
         return;
       }
 
