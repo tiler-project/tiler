@@ -13,7 +13,7 @@ public class ConstantExpression extends Expression {
       String string = (String)value;
 
       if (TimePeriodParser.isATimePeriod(string)) {
-        return TimePeriodParser.parseTimePeriodToMillis(string);
+        return TimePeriodParser.parseTimePeriodToMicroseconds(string);
       }
     }
 
