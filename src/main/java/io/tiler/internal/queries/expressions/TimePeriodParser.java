@@ -12,7 +12,7 @@ public class TimePeriodParser {
   private static final String UNIT_HOURS = "h";
   private static final String UNIT_DAYS = "d";
   private static final String UNIT_WEEKS = "w";
-  private static final BigDecimal MICROSECONDS_PER_MILLISECOND = new BigDecimal(1000l);
+  private static final BigDecimal MICROSECONDS_PER_MICROSECOND = new BigDecimal(1l);
   private static final BigDecimal MICROSECONDS_PER_SECOND = new BigDecimal(1000 * 1000l);
   private static final BigDecimal MICROSECONDS_PER_MINUTE = new BigDecimal(60 * 1000 * 1000l);
   private static final BigDecimal MICROSECONDS_PER_HOUR = new BigDecimal(60 * 60 * 1000 * 1000l);
@@ -41,7 +41,7 @@ public class TimePeriodParser {
   private static BigDecimal getMicrosecondsPerUnit(String unit) {
     switch (unit) {
       case UNIT_MICROSECONDS:
-        return MICROSECONDS_PER_MILLISECOND;
+        return MICROSECONDS_PER_MICROSECOND;
       case UNIT_SECONDS:
         return MICROSECONDS_PER_SECOND;
       case UNIT_MINUTES:
