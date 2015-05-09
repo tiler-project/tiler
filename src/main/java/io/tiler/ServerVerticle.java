@@ -3,7 +3,6 @@ package io.tiler;
 import com.jetdrone.vertx.yoke.Yoke;
 import com.jetdrone.vertx.yoke.engine.StringPlaceholderEngine;
 import com.jetdrone.vertx.yoke.middleware.*;
-import io.tiler.internal.AsyncResultImpl;
 import io.tiler.internal.RedisException;
 import io.tiler.internal.json.JsonArrayIterable;
 import io.tiler.internal.queries.AggregateField;
@@ -259,7 +258,7 @@ public class ServerVerticle extends Verticle {
 
   private void saveMetric(JsonArray metrics, int metricIndex, AsyncResultHandler<Void> handler) {
     if (metricIndex >= metrics.size()) {
-      handler.handle(AsyncResultImpl.succeed());
+      handler.handle(new DefaultFutureResult());
       return;
     }
 
@@ -332,7 +331,7 @@ public class ServerVerticle extends Verticle {
       }
     }
 
-    handler.handle(AsyncResultImpl.succeed());
+    handler.handle(new DefaultFutureResult());
   }
 
   private void checkForMissingMetrics(Collection<Query> queries, JsonArray metrics, AsyncResultHandler<Collection<String>> handler) {
@@ -343,7 +342,7 @@ public class ServerVerticle extends Verticle {
     }
 
     if (!anyQueryIsPotentiallyMissingAMetric(queries, availableMetricNames)) {
-      handler.handle(AsyncResultImpl.succeed(new ArrayList<>()));
+      handler.handle(new DefaultFutureResult(new ArrayList<>()));
       return;
     }
 
@@ -363,7 +362,7 @@ public class ServerVerticle extends Verticle {
         }
       }
 
-      handler.handle(AsyncResultImpl.succeed(missingMetricNames));
+      handler.handle(new DefaultFutureResult(missingMetricNames));
     });
   }
 
@@ -405,13 +404,13 @@ public class ServerVerticle extends Verticle {
         metricNames.add(redisValue);
       }
 
-      handler.handle(AsyncResultImpl.succeed(metricNames));
+      handler.handle(new DefaultFutureResult(metricNames));
     });
   }
 
   private void getMetrics(Collection<String> metricNames, AsyncResultHandler<JsonArray> handler) {
     if (metricNames.size() == 0) {
-      handler.handle(AsyncResultImpl.succeed(new JsonArray()));
+      handler.handle(new DefaultFutureResult(new JsonArray()));
       return;
     }
 
@@ -439,7 +438,7 @@ public class ServerVerticle extends Verticle {
         }
       }
 
-      handler.handle(AsyncResultImpl.succeed(metrics));
+      handler.handle(new DefaultFutureResult(metrics));
     });
 
     redis.mget(mgetArgs.toArray());
