@@ -154,7 +154,6 @@ public class ServerVerticle extends Verticle {
     vertx.eventBus().registerHandler("io.squarely.vertxspike.metrics", (Message<JsonObject> message) -> {
       logger.info("Received " + message.address() + " message");
       JsonArray metrics = message.body().getArray("metrics");
-      logger.info("Received metrics " + metrics);
 
       saveAndPublishMetrics(metrics, aVoid -> {
         logger.info("Metrics saved to Redis and published");
