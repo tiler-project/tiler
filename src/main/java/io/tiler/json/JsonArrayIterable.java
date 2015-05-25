@@ -1,4 +1,4 @@
-package io.tiler.internal.json;
+package io.tiler.json;
 
 import org.vertx.java.core.json.JsonArray;
 
@@ -28,6 +28,11 @@ public class JsonArrayIterable<T> implements Iterable<T> {
       @Override
       public T next() {
         return (T) innerIterator.next();
+      }
+
+      @Override
+      public void remove() {
+        innerIterator.remove();
       }
     };
   }

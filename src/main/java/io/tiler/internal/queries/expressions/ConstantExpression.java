@@ -1,5 +1,7 @@
 package io.tiler.internal.queries.expressions;
 
+import io.tiler.time.TimePeriodParser;
+
 public class ConstantExpression extends Expression {
   private Object value;
 

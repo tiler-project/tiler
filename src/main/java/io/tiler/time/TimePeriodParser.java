@@ -1,4 +1,4 @@
-package io.tiler.internal.queries.expressions;
+package io.tiler.time;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,6 +12,11 @@ public class TimePeriodParser {
   private static final String UNIT_HOURS = "h";
   private static final String UNIT_DAYS = "d";
   private static final String UNIT_WEEKS = "w";
+  private static final BigDecimal MILLISECONDS_PER_SECOND = new BigDecimal(1000l);
+  private static final BigDecimal MILLISECONDS_PER_MINUTE = new BigDecimal(60 * 1000l);
+  private static final BigDecimal MILLISECONDS_PER_HOUR = new BigDecimal(60 * 60 * 1000l);
+  private static final BigDecimal MILLISECONDS_PER_DAY = new BigDecimal(24 * 60 * 60 * 1000l);
+  private static final BigDecimal MILLISECONDS_PER_WEEK = new BigDecimal(7 * 24 * 60 * 60 * 1000l);
   private static final BigDecimal MICROSECONDS_PER_MICROSECOND = new BigDecimal(1l);
   private static final BigDecimal MICROSECONDS_PER_SECOND = new BigDecimal(1000 * 1000l);
   private static final BigDecimal MICROSECONDS_PER_MINUTE = new BigDecimal(60 * 1000 * 1000l);
@@ -21,6 +26,13 @@ public class TimePeriodParser {
 
   public static boolean isATimePeriod(String value) {
     return timePeriodPattern.matcher(value).matches();
+  }
+
+  public static long parseTimePeriodToMilliseconds(String value) {
+    return getQuantityFromTimePeriod(value)
+      .multiply(getMillisecondsPerUnit(getUnitFromTimePeriod(value)))
+      .setScale(0, RoundingMode.HALF_EVEN)
+      .longValueExact();
   }
 
   public static long parseTimePeriodToMicroseconds(String value) {
@@ -52,6 +64,23 @@ public class TimePeriodParser {
         return MICROSECONDS_PER_DAY;
       case UNIT_WEEKS:
         return MICROSECONDS_PER_WEEK;
+      default:
+        throw new IllegalArgumentException("Unsupported unit");
+    }
+  }
+
+  private static BigDecimal getMillisecondsPerUnit(String unit) {
+    switch (unit) {
+      case UNIT_SECONDS:
+        return MILLISECONDS_PER_SECOND;
+      case UNIT_MINUTES:
+        return MILLISECONDS_PER_MINUTE;
+      case UNIT_HOURS:
+        return MILLISECONDS_PER_HOUR;
+      case UNIT_DAYS:
+        return MILLISECONDS_PER_DAY;
+      case UNIT_WEEKS:
+        return MILLISECONDS_PER_WEEK;
       default:
         throw new IllegalArgumentException("Unsupported unit");
     }

@@ -4,7 +4,7 @@ import com.jetdrone.vertx.yoke.Yoke;
 import com.jetdrone.vertx.yoke.engine.StringPlaceholderEngine;
 import com.jetdrone.vertx.yoke.middleware.*;
 import io.tiler.internal.RedisException;
-import io.tiler.internal.json.JsonArrayIterable;
+import io.tiler.json.JsonArrayIterable;
 import io.tiler.internal.queries.AggregateField;
 import io.tiler.internal.queries.FromClause;
 import io.tiler.internal.queries.InvalidQueryException;
@@ -12,7 +12,10 @@ import io.tiler.internal.queries.Query;
 import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.InvalidExpressionException;
 import io.vertx.java.redis.RedisClient;
+import org.simondean.vertx.async.DefaultAsyncResult;
+import org.simondean.vertx.async.Series;
 import org.vertx.java.core.AsyncResultHandler;
+import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
@@ -36,131 +39,197 @@ public class ServerVerticle extends Verticle {
   private RedisClient redis;
   private final HashMap<SockJSSocket, SocketState> socketStates = new HashMap<>();
 
-  public void start() {
+  public void start(Future<Void> startFuture) {
     config = container.config();
     logger = container.logger();
     eventBus = vertx.eventBus();
-
-    container.deployModule("io.vertx~mod-redis~1.1.4", config.getObject("redis"), 1);
     redis = new RedisClient(eventBus, getRedisAddress());
 
-    HttpServer httpServer = vertx.createHttpServer();
-
-    Yoke yoke = new Yoke(vertx);
-    yoke.engine(new StringPlaceholderEngine("views"));
-    yoke.use(new Logger());
-    yoke.use(new ErrorHandler(true));
-    yoke.use(new Favicon());
-    yoke.use("/static", new Static("static"));
-    yoke.use(new BodyParser());
-    yoke.use(new Router()
-      .get("/", (request, next) -> {
-        request.response().redirect("/dashboards/sample");
-      })
-      .get("/dashboards/:dashboardName", (request, next) -> {
-        String dashboardName = request.getParameter("dashboardName");
-        logger.info("Serving dashboard '" + dashboardName + "'");
-        request.put("dashboardName", dashboardName);
-        request.response().setContentType("text/html", "utf-8")
-          .render("dashboard.shtml", next);
-      })
-      .post("/api/metrics", (request, next) -> {
-        Object body = request.body();
-        YokeResponse response = request.response();
-
-        if (!(body instanceof JsonObject)) {
-          sendClientError(response, "Request body needs to be a JSON object");
+    new Series<Void>()
+      .task(handler -> container.deployModule("io.vertx~mod-redis~1.1.4", config.getObject("redis"), 1, result -> {
+        if (result.failed()) {
+          handler.handle(DefaultAsyncResult.fail(result.cause()));
           return;
         }
 
-        JsonObject jsonBody = (JsonObject) body;
+        handler.handle(DefaultAsyncResult.succeed(null));
+      }))
+      .task(handler -> {
+        HttpServer httpServer = vertx.createHttpServer();
 
-        // TODO: Move this logic into a method for validating metrics JSON
-        // TODO: Reuse the method for metrics that arrive via the ESB
-        if (!jsonBody.containsField("metrics")) {
-          sendClientError(response, "Request body needs to contain a 'metrics' field");
-          return;
-        }
+        Yoke yoke = new Yoke(vertx);
+        yoke.engine(new StringPlaceholderEngine("views"));
+        yoke.use(new Logger());
+        yoke.use(new ErrorHandler(true));
+        yoke.use(new Favicon());
+        yoke.use("/static", new Static("static"));
+        yoke.use(new BodyParser());
+        yoke.use(new Router()
+          .get("/", (request, next) -> {
+            request.response().redirect("/dashboards/sample");
+          })
+          .get("/dashboards/:dashboardName", (request, next) -> {
+            String dashboardName = request.getParameter("dashboardName");
+            logger.info("Serving dashboard '" + dashboardName + "'");
+            request.put("dashboardName", dashboardName);
+            request.response().setContentType("text/html", "utf-8")
+              .render("dashboard.shtml", next);
+          })
+          .post("/api/metrics", (request, next) -> {
+            Object body = request.body();
+            YokeResponse response = request.response();
 
-        Object metrics = jsonBody.getValue("metrics");
-
-        if (!(metrics instanceof JsonArray)) {
-          sendClientError(response, "'metrics' field in request body must be an array");
-          return;
-        }
-
-        JsonArray jsonMetrics = (JsonArray) metrics;
-
-        // TODO: Validate name and points
-
-        saveAndPublishMetrics(jsonMetrics, result -> {
-          if (result.failed()) {
-            logger.info("Metrics could not be saved or published", result.cause());
-            return;
-          }
-
-          logger.info("Metrics saved to Redis and published");
-
-          // TODO: Send a different status code when not successful?
-          response.setStatusCode(204).end();
-        });
-      }));
-    yoke.listen(httpServer);
-
-    SockJSServer sockJSServer = vertx.createSockJSServer(httpServer);
-
-    // TODO: Set the library_url value
-    JsonObject sockJSConfig = new JsonObject().putString("prefix", "/events");
-
-    sockJSServer.installApp(sockJSConfig, socket -> {
-      socket.dataHandler(buffer -> {
-        JsonObject message = new JsonObject(buffer.toString());
-
-        if ("subscribe".equals(message.getString("type"))) {
-          JsonObject payload = message.getObject("payload");
-          JsonObject queries = payload.getObject("queries");
-
-          SocketState socketState = createStateForSocket(queries);
-          socketStates.put(socket, socketState);
-
-          // TODO: Use timestamp on metrics to discard old metrics.  Where should this be done?  Client side or server side?
-
-          getMetricsForQueries(socketState.queries().values(), metrics -> {
-            if (metrics.failed()) {
-              logger.info("Metrics could not be retrieved", metrics.cause());
+            if (!(body instanceof JsonObject)) {
+              sendClientError(response, "Request body needs to be a JSON object");
               return;
             }
 
-            publishMetrics(metrics.result(), result -> {
+            JsonObject jsonBody = (JsonObject) body;
+
+            // TODO: Move this logic into a method for validating metrics JSON
+            // TODO: Reuse the method for metrics that arrive via the ESB
+            if (!jsonBody.containsField("metrics")) {
+              sendClientError(response, "Request body needs to contain a 'metrics' field");
+              return;
+            }
+
+            Object metrics = jsonBody.getValue("metrics");
+
+            if (!(metrics instanceof JsonArray)) {
+              sendClientError(response, "'metrics' field in request body must be an array");
+              return;
+            }
+
+            JsonArray jsonMetrics = (JsonArray) metrics;
+
+            // TODO: Validate name and points
+
+            saveAndPublishMetrics(jsonMetrics, result -> {
               if (result.failed()) {
-                logger.info("Metrics could not be published", result.cause());
+                logger.info("Metrics could not be saved or published", result.cause());
                 return;
               }
 
-              logger.info("Metrics retrieved from Redis and published");
+              logger.info("Metrics saved to Redis and published");
+
+              // TODO: Send a different status code when not successful?
+              response.setStatusCode(204).end();
             });
+          }));
+        yoke.listen(httpServer);
+
+        SockJSServer sockJSServer = vertx.createSockJSServer(httpServer);
+
+        // TODO: Set the library_url value
+        JsonObject sockJSConfig = new JsonObject().putString("prefix", "/events");
+
+        sockJSServer.installApp(sockJSConfig, socket -> {
+          socket.dataHandler(buffer -> {
+            JsonObject message = new JsonObject(buffer.toString());
+
+            if ("subscribe".equals(message.getString("type"))) {
+              JsonObject payload = message.getObject("payload");
+              JsonObject queries = payload.getObject("queries");
+
+              SocketState socketState = createStateForSocket(queries);
+              socketStates.put(socket, socketState);
+
+              // TODO: Use timestamp on metrics to discard old metrics.  Where should this be done?  Client side or server side?
+
+              getMetricsForQueries(socketState.queries().values(), metrics -> {
+                if (metrics.failed()) {
+                  logger.info("Metrics could not be retrieved", metrics.cause());
+                  return;
+                }
+
+                publishMetrics(metrics.result(), result -> {
+                  if (result.failed()) {
+                    logger.info("Metrics could not be published", result.cause());
+                    return;
+                  }
+
+                  logger.info("Metrics retrieved from Redis and published");
+                });
+              });
+            }
           });
+
+          socket.endHandler(aVoid -> {
+            logger.info("Removing listener");
+            socketStates.remove(socket);
+          });
+        });
+
+        httpServer.listen(8080, result -> {
+          if (result.failed()) {
+            handler.handle(DefaultAsyncResult.fail(result.cause()));
+            return;
+          }
+
+          handler.handle(DefaultAsyncResult.succeed(null));
+        });
+      })
+      .task(handler -> {
+        vertx.eventBus().registerHandler("io.tiler", (Message<JsonObject> message) -> {
+          String messageType = message.body().getString("type");
+          logger.info("Received " + messageType + " message");
+          JsonObject messageBody = message.body().getObject("body");
+
+          switch (messageType) {
+            case "publishMetrics": {
+              JsonArray metrics = messageBody.getArray("metrics");
+
+              saveAndPublishMetrics(metrics, aVoid -> {
+                logger.info("Metrics saved to Redis and published");
+              });
+
+              return;
+            }
+            case "getMetrics": {
+              JsonArray metricNames = messageBody.getArray("metricNames");
+
+              getMetrics(metricNames.toList(), result -> {
+                if (result.failed()) {
+                  logger.error("Failed to retrieve metrics", result.cause());
+                  JsonObject replyMessage = new JsonObject()
+                    .putObject("body", new JsonObject()
+                      .putObject("error", new JsonObject()
+                        .putString("message", "Failed to retrieve metrics")));
+
+                  message.reply(replyMessage);
+                  return;
+                }
+
+                JsonObject replyMessage = new JsonObject()
+                  .putObject("body", new JsonObject()
+                    .putArray("metrics", result.result()));
+
+                message.reply(replyMessage);
+                logger.info("Replied with metrics");
+              });
+
+              return;
+            }
+            default: {
+              logger.error("Unrecognised message type '" + messageType + "'");
+              return;
+            }
+          }
+        });
+        handler.handle(DefaultAsyncResult.succeed(null));
+      })
+      .task(handler -> {
+        container.logger().info("ServerVerticle started");
+        handler.handle(DefaultAsyncResult.succeed(null));
+      })
+      .run(handler -> {
+        if (handler.failed()) {
+          startFuture.setFailure(handler.cause());
+          return;
         }
+
+        startFuture.setResult(null);
       });
-
-      socket.endHandler(aVoid -> {
-        logger.info("Removing listener");
-        socketStates.remove(socket);
-      });
-    });
-
-    httpServer.listen(8080);
-
-    vertx.eventBus().registerHandler("io.squarely.vertxspike.metrics", (Message<JsonObject> message) -> {
-      logger.info("Received " + message.address() + " message");
-      JsonArray metrics = message.body().getArray("metrics");
-
-      saveAndPublishMetrics(metrics, aVoid -> {
-        logger.info("Metrics saved to Redis and published");
-      });
-    });
-
-    container.logger().info("ServerVerticle started");
   }
 
   private String getRedisAddress() {
