@@ -1,8 +1,10 @@
 package io.tiler.internal.queries;
 
-import io.tiler.internal.json.JsonArrayIterable;
+import io.tiler.json.JsonArrayIterable;
+import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.ExpressionFactory;
 import io.tiler.internal.queries.expressions.InvalidExpressionException;
+import io.tiler.internal.queries.expressions.RegularExpressionOperation;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -45,21 +47,34 @@ public class FromClause {
     boolean containsAtLeastOnePattern = false;
 
     for (Object jsonItem : jsonItems) {
-      Object value;
+      Expression expression;
 
       try {
-        value = ExpressionFactory.createExpressionFromJsonExpression(jsonItem).evaluate(null);
+        expression = ExpressionFactory.createExpressionFromJsonExpression(jsonItem);
       } catch (InvalidExpressionException e) {
         throw new InvalidQueryException("Invalid from clause in query", e);
       }
 
-      if (value instanceof Pattern) {
+      if (expression instanceof RegularExpressionOperation) {
         containsAtLeastOnePattern = true;
-      } else if (!(value instanceof String)) {
-        throw new InvalidQueryException("Items in from clause must be strings or regular expressions");
-      }
+        RegularExpressionOperation regularExpressionOperation = (RegularExpressionOperation) expression;
 
-      items.add(value);
+        items.add(regularExpressionOperation.pattern());
+      } else {
+        Object value;
+
+        try {
+          value = expression.evaluate(null);
+        } catch (InvalidExpressionException e) {
+          throw new InvalidQueryException("Invalid from clause in query", e);
+        }
+
+        if (!(value instanceof String)) {
+          throw new InvalidQueryException("Items in from clause must be strings or regular expressions");
+        }
+
+        items.add(value);
+      }
     }
 
     return new FromClause(items, containsAtLeastOnePattern);

@@ -1,13 +1,22 @@
 package io.tiler.internal.queries.expressions;
 
+import io.tiler.regex.InvalidPatternOptionsException;
+import io.tiler.regex.PatternOptionsParser;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 public class RegularExpressionOperation extends OperationWithNamedArguments {
+  private final PatternOptionsParser patternOptionsParser;
+  private final Pattern pattern;
+
   public RegularExpressionOperation(Iterable<Map.Entry<String, Expression>> arguments) throws InvalidExpressionException {
     super(arguments);
+
+    patternOptionsParser = new PatternOptionsParser();
+    pattern = getPattern();
   }
 
   @Override
@@ -22,6 +31,14 @@ public class RegularExpressionOperation extends OperationWithNamedArguments {
 
   @Override
   public Object evaluate(Object leftHandValue) throws InvalidExpressionException {
+    if (!(leftHandValue instanceof String)) {
+      throw new InvalidExpressionException("Left hand value must be a String");
+    }
+
+    return pattern.matcher((String) leftHandValue).find();
+  }
+
+  private Pattern getPattern() throws InvalidExpressionException {
     Object pattern = getArgument("$pattern").evaluate(null);
 
     if (pattern == null) {
@@ -55,45 +72,14 @@ public class RegularExpressionOperation extends OperationWithNamedArguments {
   }
 
   private int parseOptions(String options) throws InvalidExpressionException {
-    int flags = 0;
-
-    for (int index = 0, length = options.length(); index < length; index++) {
-      char option = options.charAt(index);
-      int flag;
-
-      switch (option) {
-        case 'd':
-          flag = Pattern.UNIX_LINES;
-          break;
-        case 'i':
-          flag = Pattern.CASE_INSENSITIVE;
-          break;
-        case 'x':
-          flag = Pattern.COMMENTS;
-          break;
-        case 'm':
-          flag = Pattern.MULTILINE;
-          break;
-        case 's':
-          flag = Pattern.DOTALL;
-          break;
-        case 'u':
-          flag = Pattern.UNICODE_CASE;
-          break;
-        case 'U':
-          flag = Pattern.UNICODE_CHARACTER_CLASS;
-          break;
-        default:
-          throw new InvalidExpressionException("Unsupported option '" + option + "'");
-      }
-
-      if ((flags & flag) != 0) {
-        throw new InvalidExpressionException("Same option '" + option + "' specified multiple times");
-      }
-
-      flags |= flag;
+    try {
+      return patternOptionsParser.parsePatternOptions(options);
+    } catch (InvalidPatternOptionsException e) {
+      throw new InvalidExpressionException("Invalid options argument", e);
     }
+  }
 
-    return flags;
+  public Pattern pattern() {
+    return pattern;
   }
 }
