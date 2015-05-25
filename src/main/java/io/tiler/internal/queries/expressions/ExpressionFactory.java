@@ -16,6 +16,7 @@ public class ExpressionFactory {
   private static final String NOT_EQUALS_OPERATOR = "$ne";
   private static final String NOW_OPERATOR = "$now";
   private static final String MEAN_OPERATOR = "$mean";
+  private static final String SUM_OPERATOR = "$sum";
   private static final String MINUS_OPERATOR = "$minus";
   private static final String AND_OPERATOR = "$and";
   private static final String OR_OPERATOR = "$or";
@@ -79,6 +80,8 @@ public class ExpressionFactory {
         return new NowOperation();
       case MEAN_OPERATOR:
         return new MeanOperation();
+      case SUM_OPERATOR:
+        return new SumOperation();
       default:
         throw new InvalidExpressionException("Invalid operator " + operator);
     }
