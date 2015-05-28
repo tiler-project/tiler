@@ -388,7 +388,8 @@ public class ServerVerticle extends Verticle {
             newMessage.putString("type", "notify");
             newMessage.putObject("payload", payload);
 
-            logger.info("Sending SockJS message " + newMessage);
+            //logger.info("Sending SockJS message " + newMessage);
+            logger.info("Sending SockJS message");
 
             Buffer newMessageBuffer = new Buffer(newMessage.encode());
             socket.write(newMessageBuffer);
@@ -458,7 +459,7 @@ public class ServerVerticle extends Verticle {
   private void getMetricNames(AsyncResultHandler<Collection<String>> handler) {
     redis.smembers("metricNames", (Handler<Message<JsonObject>>) reply -> {
       JsonObject body = reply.body();
-      logger.info("Received Redis values " + body);
+      //logger.info("Received Redis values " + body);
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
@@ -490,7 +491,7 @@ public class ServerVerticle extends Verticle {
 
     mgetArgs.add((Handler<Message<JsonObject>>) reply -> {
       JsonObject body = reply.body();
-      logger.info("Received Redis values " + body);
+      //logger.info("Received Redis values " + body);
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
@@ -754,7 +755,8 @@ public class ServerVerticle extends Verticle {
     JsonArray transformedMetrics = new JsonArray();
 
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      logger.info("Applying projection " + metricClause + " to metric " + metric);
+      //logger.info("Applying projection " + metricClause + " to metric " + metric);
+      logger.info("Applying projection " + metricClause + " to metric");
       JsonObject transformedMetric = new JsonObject();
 
       for (String projectionFieldName : metricClause.getFieldNames()) {
