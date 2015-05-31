@@ -4,6 +4,9 @@ import com.jetdrone.vertx.yoke.Yoke;
 import com.jetdrone.vertx.yoke.engine.StringPlaceholderEngine;
 import com.jetdrone.vertx.yoke.middleware.*;
 import io.tiler.internal.RedisException;
+import io.tiler.internal.SocketState;
+import io.tiler.internal.config.Config;
+import io.tiler.internal.config.ConfigFactory;
 import io.tiler.json.JsonArrayIterable;
 import io.tiler.internal.queries.AggregateField;
 import io.tiler.internal.queries.FromClause;
@@ -12,8 +15,9 @@ import io.tiler.internal.queries.Query;
 import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.InvalidExpressionException;
 import io.vertx.java.redis.RedisClient;
+import org.simondean.vertx.async.Async;
+import org.simondean.vertx.async.AsyncResultHandlerWrapper;
 import org.simondean.vertx.async.DefaultAsyncResult;
-import org.simondean.vertx.async.Series;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
@@ -31,29 +35,20 @@ import org.vertx.java.platform.Verticle;
 import java.util.*;
 
 public class ServerVerticle extends Verticle {
-  private static final String METRIC_NAMES_REDIS_KEY = "metricNames";
-  private static final String METRIC_REDIS_KEY_PREFIX = "metrics.";
-  private JsonObject config;
+  private Config config;
   private org.vertx.java.core.logging.Logger logger;
   private EventBus eventBus;
   private RedisClient redis;
   private final HashMap<SockJSSocket, SocketState> socketStates = new HashMap<>();
 
   public void start(Future<Void> startFuture) {
-    config = container.config();
+    config = new ConfigFactory().load(container.config());
     logger = container.logger();
     eventBus = vertx.eventBus();
-    redis = new RedisClient(eventBus, getRedisAddress());
+    redis = new RedisClient(eventBus, config.redis().address());
 
-    new Series<Void>()
-      .task(handler -> container.deployModule("io.vertx~mod-redis~1.1.4", config.getObject("redis"), 1, result -> {
-        if (result.failed()) {
-          handler.handle(DefaultAsyncResult.fail(result.cause()));
-          return;
-        }
-
-        handler.handle(DefaultAsyncResult.succeed(null));
-      }))
+    Async.series()
+      .task(handler -> container.deployModule("io.vertx~mod-redis~1.1.4", config.redis().toRedisModuleConfig(), 1, AsyncResultHandlerWrapper.wrap(handler)))
       .task(handler -> {
         HttpServer httpServer = vertx.createHttpServer();
 
@@ -155,19 +150,12 @@ public class ServerVerticle extends Verticle {
           });
 
           socket.endHandler(aVoid -> {
-            logger.info("Removing listener");
+            logger.info("Socket closed");
             socketStates.remove(socket);
           });
         });
 
-        httpServer.listen(8080, result -> {
-          if (result.failed()) {
-            handler.handle(DefaultAsyncResult.fail(result.cause()));
-            return;
-          }
-
-          handler.handle(DefaultAsyncResult.succeed(null));
-        });
+        httpServer.listen(8080, AsyncResultHandlerWrapper.wrap(handler));
       })
       .task(handler -> {
         vertx.eventBus().registerHandler("io.tiler", (Message<JsonObject> message) -> {
@@ -179,7 +167,12 @@ public class ServerVerticle extends Verticle {
             case "publishMetrics": {
               JsonArray metrics = messageBody.getArray("metrics");
 
-              saveAndPublishMetrics(metrics, aVoid -> {
+              saveAndPublishMetrics(metrics, result -> {
+                if (result.failed()) {
+                  logger.error("Failed to save or publish metrics", result.cause());
+                  return;
+                }
+
                 logger.info("Metrics saved to Redis and published");
               });
 
@@ -216,30 +209,19 @@ public class ServerVerticle extends Verticle {
             }
           }
         });
-        handler.handle(DefaultAsyncResult.succeed(null));
-      })
-      .task(handler -> {
-        container.logger().info("ServerVerticle started");
+
         handler.handle(DefaultAsyncResult.succeed(null));
       })
       .run(handler -> {
         if (handler.failed()) {
+          container.logger().error("ServerVerticle failed to start", handler.cause());
           startFuture.setFailure(handler.cause());
           return;
         }
 
+        container.logger().info("ServerVerticle started");
         startFuture.setResult(null);
       });
-  }
-
-  private String getRedisAddress() {
-    JsonObject redisConfig = config.getObject("redis");
-
-    if (redisConfig != null && redisConfig.containsField("address")) {
-      return config.getObject("redis").getString("address");
-    }
-
-    return "io.tiler.redis";
   }
 
   private SocketState createStateForSocket(JsonObject queries) {
@@ -303,7 +285,7 @@ public class ServerVerticle extends Verticle {
   private void saveMetrics(JsonArray metrics, AsyncResultHandler<Void> handler) {
     logger.info("Saving metrics to Redis");
     ArrayList<Object> saddArgs = new ArrayList<>();
-    saddArgs.add(METRIC_NAMES_REDIS_KEY);
+    saddArgs.add(config.getMetricNamesKey());
 
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
       saddArgs.add(metric.getString("name"));
@@ -334,7 +316,7 @@ public class ServerVerticle extends Verticle {
 
     String metricName = metric.getString("name");
     logger.info("Saving metric '" + metricName + "'");
-    redis.set(METRIC_REDIS_KEY_PREFIX + metricName, metric.toString(), (Handler<Message<JsonObject>>) reply -> {
+    redis.set(config.getMetricKey(metricName), metric.toString(), (Handler<Message<JsonObject>>) reply -> {
       JsonObject body = reply.body();
       String status = body.getString("status");
 
@@ -486,7 +468,7 @@ public class ServerVerticle extends Verticle {
     ArrayList<Object> mgetArgs = new ArrayList<>();
 
     for (String metricName : metricNames) {
-      mgetArgs.add(METRIC_REDIS_KEY_PREFIX + metricName);
+      mgetArgs.add(config.getMetricKey(metricName));
     }
 
     mgetArgs.add((Handler<Message<JsonObject>>) reply -> {
@@ -810,13 +792,5 @@ public class ServerVerticle extends Verticle {
     }
 
     return isMatch;
-  }
-
-  private class SocketState {
-    private HashMap<String, Query> queries = new HashMap<>();
-
-    public HashMap<String, Query> queries() {
-      return queries;
-    }
   }
 }
