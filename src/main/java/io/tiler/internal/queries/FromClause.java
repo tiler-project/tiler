@@ -1,6 +1,6 @@
 package io.tiler.internal.queries;
 
-import io.tiler.json.JsonArrayIterable;
+import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.ExpressionFactory;
 import io.tiler.internal.queries.expressions.InvalidExpressionException;

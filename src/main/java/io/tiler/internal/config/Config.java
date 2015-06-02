@@ -2,7 +2,7 @@ package io.tiler.internal.config;
 
 public class Config {
   private static final String METRIC_NAMES_REDIS_KEY = "metricNames";
-  private static final String METRIC_REDIS_KEY_PREFIX = "metrics.";
+  private static final String METRIC_REDIS_KEY_PREFIX = "metrics:";
   private final Redis redis;
 
   public Config(Redis redis) {

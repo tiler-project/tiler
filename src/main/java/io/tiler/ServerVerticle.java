@@ -3,11 +3,11 @@ package io.tiler;
 import com.jetdrone.vertx.yoke.Yoke;
 import com.jetdrone.vertx.yoke.engine.StringPlaceholderEngine;
 import com.jetdrone.vertx.yoke.middleware.*;
+import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.internal.RedisException;
 import io.tiler.internal.SocketState;
 import io.tiler.internal.config.Config;
 import io.tiler.internal.config.ConfigFactory;
-import io.tiler.json.JsonArrayIterable;
 import io.tiler.internal.queries.AggregateField;
 import io.tiler.internal.queries.FromClause;
 import io.tiler.internal.queries.InvalidQueryException;
@@ -25,7 +25,6 @@ import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.impl.DefaultFutureResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.sockjs.SockJSServer;
@@ -137,14 +136,8 @@ public class ServerVerticle extends Verticle {
                   return;
                 }
 
-                publishMetrics(metrics.result(), result -> {
-                  if (result.failed()) {
-                    logger.info("Metrics could not be published", result.cause());
-                    return;
-                  }
-
-                  logger.info("Metrics retrieved from Redis and published");
-                });
+                publishMetrics(metrics.result(), socket, socketState);
+                logger.info("Metrics retrieved from Redis and published");
               });
             }
           });
@@ -158,7 +151,7 @@ public class ServerVerticle extends Verticle {
         httpServer.listen(8080, AsyncResultHandlerWrapper.wrap(handler));
       })
       .task(handler -> {
-        vertx.eventBus().registerHandler("io.tiler", (Message<JsonObject> message) -> {
+        eventBus.registerHandler("io.tiler", (Message<JsonObject> message) -> {
           String messageType = message.body().getString("type");
           logger.info("Received " + messageType + " message");
           JsonObject messageBody = message.body().getObject("body");
@@ -205,7 +198,6 @@ public class ServerVerticle extends Verticle {
             }
             default: {
               logger.error("Unrecognised message type '" + messageType + "'");
-              return;
             }
           }
         });
@@ -261,12 +253,12 @@ public class ServerVerticle extends Verticle {
 
       checkForMissingMetrics(getQueriesThatMatchMetrics(metrics), metrics, missingMetricNames -> {
         if (missingMetricNames.failed()) {
-          handler.handle(new DefaultFutureResult(missingMetricNames.cause()));
+          handler.handle(DefaultAsyncResult.fail(missingMetricNames));
         }
 
         getMetrics(missingMetricNames.result(), missingMetrics -> {
           if (missingMetrics.failed()) {
-            handler.handle(new DefaultFutureResult(missingMetrics.cause()));
+            handler.handle(DefaultAsyncResult.fail(missingMetrics));
             return;
           }
 
@@ -276,7 +268,8 @@ public class ServerVerticle extends Verticle {
             combinedMetrics.addObject(metric);
           }
 
-          publishMetrics(combinedMetrics, handler);
+          publishMetrics(combinedMetrics);
+          handler.handle(DefaultAsyncResult.succeed());
         });
       });
     });
@@ -296,7 +289,7 @@ public class ServerVerticle extends Verticle {
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(new DefaultFutureResult(new RedisException(body)));
+        handler.handle(DefaultAsyncResult.fail(new RedisException(body)));
         return;
       }
 
@@ -308,7 +301,7 @@ public class ServerVerticle extends Verticle {
 
   private void saveMetric(JsonArray metrics, int metricIndex, AsyncResultHandler<Void> handler) {
     if (metricIndex >= metrics.size()) {
-      handler.handle(new DefaultFutureResult());
+      handler.handle(DefaultAsyncResult.succeed());
       return;
     }
 
@@ -321,7 +314,7 @@ public class ServerVerticle extends Verticle {
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(new DefaultFutureResult(new RedisException(body)));
+        handler.handle(DefaultAsyncResult.fail(new RedisException(body)));
         return;
       }
 
@@ -329,60 +322,62 @@ public class ServerVerticle extends Verticle {
     });
   }
 
-  private void publishMetrics(JsonArray metrics, AsyncResultHandler<Void> handler) {
+  private void publishMetrics(JsonArray metrics) {
     for (Map.Entry<SockJSSocket, SocketState> socketAndSocketState : socketStates.entrySet()) {
       SockJSSocket socket = socketAndSocketState.getKey();
       SocketState socketState = socketAndSocketState.getValue();
+      publishMetrics(metrics, socket, socketState);
+    }
+  }
 
-      for (Map.Entry<String, Query> queryEntry : socketState.queries().entrySet()) {
-        String queryKey = queryEntry.getKey();
-        Query query = queryEntry.getValue();
+  private void publishMetrics(JsonArray metrics, SockJSSocket socket, SocketState socketState) {
+    for (Map.Entry<String, Query> queryEntry : socketState.queries().entrySet()) {
+      String queryKey = queryEntry.getKey();
+      Query query = queryEntry.getValue();
 
-        JsonArray matchingMetrics = query.fromClause().findMatchingMetrics(metrics);
+      JsonArray matchingMetrics = query.fromClause().findMatchingMetrics(metrics);
 
-        if (matchingMetrics.size() > 0) {
-          StringBuilder logMessageBuilder = new StringBuilder();
-          logMessageBuilder.append("Query '")
-            .append(queryKey)
-            .append("' matches metrics ");
+      if (matchingMetrics.size() > 0) {
+        StringBuilder logMessageBuilder = new StringBuilder();
+        logMessageBuilder.append("Query '")
+          .append(queryKey)
+          .append("' matches metrics ");
 
-          String separator = "";
+        String separator = "";
 
-          for (JsonObject metric : new JsonArrayIterable<JsonObject>(matchingMetrics)) {
-            logMessageBuilder.append(metric.getString("name"));
-            logMessageBuilder.append(separator);
-            separator = ", ";
-          }
-
-          JsonArray transformedMetrics = null;
-
-          try {
-            transformedMetrics = applyQueryToMetrics(query, matchingMetrics);
-          } catch (InvalidExpressionException e) {
-            logger.error("Invalid query expression", e);
-          }
-
-          if (transformedMetrics != null) {
-            JsonObject payload = new JsonObject();
-            payload.putString("key", queryKey);
-            payload.putArray("metrics", transformedMetrics);
-            JsonObject newMessage = new JsonObject();
-            newMessage.putString("type", "notify");
-            newMessage.putObject("payload", payload);
-
-            //logger.info("Sending SockJS message " + newMessage);
-            logger.info("Sending SockJS message");
-
-            Buffer newMessageBuffer = new Buffer(newMessage.encode());
-            socket.write(newMessageBuffer);
-          }
-        } else {
-          logger.info("Query '" + queryKey + "' does not match metrics");
+        for (JsonObject metric : new JsonArrayIterable<JsonObject>(matchingMetrics)) {
+          logMessageBuilder.append(metric.getString("name"));
+          logMessageBuilder.append(separator);
+          separator = ", ";
         }
+
+        logger.info(logMessageBuilder.toString());
+
+        JsonArray transformedMetrics = null;
+
+        try {
+          transformedMetrics = applyQueryToMetrics(query, matchingMetrics);
+        } catch (InvalidExpressionException e) {
+          logger.error("Invalid query expression", e);
+        }
+
+        if (transformedMetrics != null) {
+          JsonObject payload = new JsonObject();
+          payload.putString("key", queryKey);
+          payload.putArray("metrics", transformedMetrics);
+          JsonObject newMessage = new JsonObject();
+          newMessage.putString("type", "notify");
+          newMessage.putObject("payload", payload);
+
+          logger.info("Sending SockJS message");
+
+          Buffer newMessageBuffer = new Buffer(newMessage.encode());
+          socket.write(newMessageBuffer);
+        }
+      } else {
+        logger.info("Query '" + queryKey + "' does not match metrics");
       }
     }
-
-    handler.handle(new DefaultFutureResult());
   }
 
   private void checkForMissingMetrics(Collection<Query> queries, JsonArray metrics, AsyncResultHandler<Collection<String>> handler) {
@@ -393,7 +388,7 @@ public class ServerVerticle extends Verticle {
     }
 
     if (!anyQueryIsPotentiallyMissingAMetric(queries, availableMetricNames)) {
-      handler.handle(new DefaultFutureResult(new ArrayList<>()));
+      handler.handle(DefaultAsyncResult.succeed(new ArrayList<>()));
       return;
     }
 
@@ -413,14 +408,14 @@ public class ServerVerticle extends Verticle {
         }
       }
 
-      handler.handle(new DefaultFutureResult(missingMetricNames));
+      handler.handle(DefaultAsyncResult.succeed(missingMetricNames));
     });
   }
 
   private void getMetricsForQueries(Collection<Query> queries, AsyncResultHandler<JsonArray> handler) {
     getMetricNames(metricNames -> {
       if (metricNames.failed()) {
-        handler.handle(new DefaultFutureResult(metricNames.cause()));
+        handler.handle(DefaultAsyncResult.fail(metricNames));
         return;
       }
 
@@ -439,13 +434,12 @@ public class ServerVerticle extends Verticle {
   }
 
   private void getMetricNames(AsyncResultHandler<Collection<String>> handler) {
-    redis.smembers("metricNames", (Handler<Message<JsonObject>>) reply -> {
+    redis.smembers(config.getMetricNamesKey(), (Handler<Message<JsonObject>>) reply -> {
       JsonObject body = reply.body();
-      //logger.info("Received Redis values " + body);
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(new DefaultFutureResult(new RedisException(body)));
+        handler.handle(DefaultAsyncResult.fail(new RedisException(body)));
         return;
       }
 
@@ -455,13 +449,13 @@ public class ServerVerticle extends Verticle {
         metricNames.add(redisValue);
       }
 
-      handler.handle(new DefaultFutureResult(metricNames));
+      handler.handle(DefaultAsyncResult.succeed(metricNames));
     });
   }
 
   private void getMetrics(Collection<String> metricNames, AsyncResultHandler<JsonArray> handler) {
     if (metricNames.size() == 0) {
-      handler.handle(new DefaultFutureResult(new JsonArray()));
+      handler.handle(DefaultAsyncResult.succeed(new JsonArray()));
       return;
     }
 
@@ -473,11 +467,11 @@ public class ServerVerticle extends Verticle {
 
     mgetArgs.add((Handler<Message<JsonObject>>) reply -> {
       JsonObject body = reply.body();
-      //logger.info("Received Redis values " + body);
       String status = body.getString("status");
 
       if (!"ok".equals(status)) {
-        handler.handle(new DefaultFutureResult(new RedisException(body)));
+        RedisException e = new RedisException(body);
+        handler.handle(DefaultAsyncResult.fail(e));
         return;
       }
 
@@ -489,7 +483,7 @@ public class ServerVerticle extends Verticle {
         }
       }
 
-      handler.handle(new DefaultFutureResult(metrics));
+      handler.handle(DefaultAsyncResult.succeed(metrics));
     });
 
     redis.mget(mgetArgs.toArray());
@@ -737,7 +731,6 @@ public class ServerVerticle extends Verticle {
     JsonArray transformedMetrics = new JsonArray();
 
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      //logger.info("Applying projection " + metricClause + " to metric " + metric);
       logger.info("Applying projection " + metricClause + " to metric");
       JsonObject transformedMetric = new JsonObject();
 
@@ -780,13 +773,12 @@ public class ServerVerticle extends Verticle {
 
       if (result == null || !(result instanceof Boolean)) {
         isMatch = false;
-        break;
+      }
+      else {
+        isMatch = (boolean) result;
       }
 
-      boolean booleanResult = (boolean) result;
-
-      if (booleanResult == false) {
-        isMatch = false;
+      if (!isMatch) {
         break;
       }
     }

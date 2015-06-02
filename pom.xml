@@ -53,7 +53,8 @@
     <vertx.version>2.1.5</vertx.version>
     <vertx.testtools.version>2.0.3-final</vertx.testtools.version>
     <junit.version>4.11</junit.version>
-    <vertx-async.version>0.1.4</vertx-async.version>
+    <tiler-core.version>0.1.0</tiler-core.version>
+    <vertx-async.version>0.1.5</vertx-async.version>
 
     <!--Plugin versions-->
     <maven.compiler.plugin.version>3.0</maven.compiler.plugin.version>
@@ -89,6 +90,18 @@
     </dependency>
     <!--Dependencies provided by included Vert.x modules-->
     <dependency>
+      <groupId>io.tiler</groupId>
+      <artifactId>tiler-core</artifactId>
+      <version>${tiler-core.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.simondean.vertx</groupId>
+      <artifactId>vertx-async</artifactId>
+      <version>${vertx-async.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>mod-redis-client</artifactId>
       <version>1.1.4</version>
@@ -98,12 +111,6 @@
       <groupId>com.jetdrone</groupId>
       <artifactId>yoke</artifactId>
       <version>2.0.17</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.simondean.vertx</groupId>
-      <artifactId>vertx-async</artifactId>
-      <version>${vertx-async.version}</version>
       <scope>provided</scope>
     </dependency>
     <!--Test dependencies-->

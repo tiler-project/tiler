@@ -17,12 +17,15 @@ public class ExpressionFactory {
   private static final String NOW_OPERATOR = "$now";
   private static final String MEAN_OPERATOR = "$mean";
   private static final String SUM_OPERATOR = "$sum";
+  private static final String FIRST_OPERATOR = "$first";
+  private static final String LAST_OPERATOR = "$last";
   private static final String MINUS_OPERATOR = "$minus";
   private static final String AND_OPERATOR = "$and";
   private static final String OR_OPERATOR = "$or";
   private static final String NOR_OPERATOR = "$nor";
   private static final String NOT_OPERATOR = "$not";
   private static final String INTERVALS_OPERATOR = "$intervals";
+  private static final String ALL_OPERATOR = "$all";
   private static final String REGULAR_EXPRESSION_OPERATOR = "$regex";
 
   private static Iterable<Expression> createExpressionsFromJsonObject(JsonObject jsonObject) throws InvalidExpressionException {
@@ -82,6 +85,12 @@ public class ExpressionFactory {
         return new MeanOperation();
       case SUM_OPERATOR:
         return new SumOperation();
+      case FIRST_OPERATOR:
+        return new FirstOperation();
+      case LAST_OPERATOR:
+        return new LastOperation();
+      case ALL_OPERATOR:
+        return new AllOperation();
       default:
         throw new InvalidExpressionException("Invalid operator " + operator);
     }

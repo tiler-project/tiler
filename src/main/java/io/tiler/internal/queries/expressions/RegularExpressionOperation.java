@@ -1,7 +1,7 @@
 package io.tiler.internal.queries.expressions;
 
-import io.tiler.regex.InvalidPatternOptionsException;
-import io.tiler.regex.PatternOptionsParser;
+import io.tiler.core.regex.InvalidPatternOptionsException;
+import io.tiler.core.regex.PatternOptionsParser;
 
 import java.util.Arrays;
 import java.util.List;

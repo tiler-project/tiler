@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 public class IntervalsOperation extends OperationWithNamedArguments {
-    public IntervalsOperation(Iterable<Map.Entry<String, Expression>> arguments) throws InvalidExpressionException {
-      super(arguments);
-    }
+  public IntervalsOperation(Iterable<Map.Entry<String, Expression>> arguments) throws InvalidExpressionException {
+    super(arguments);
+  }
 
   @Override
   public List<String> getMandatoryArgumentNames() {
