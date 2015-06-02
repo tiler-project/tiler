@@ -101,7 +101,7 @@ public class FromClause {
   public boolean matchesMetricName(String metricName) {
     for (Object item : items) {
       if (item instanceof String) {
-        if (metricName.equals((String) item)) {
+        if (metricName.equals(item)) {
           return true;
         }
       } else {
