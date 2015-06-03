@@ -338,16 +338,16 @@ public class ServerVerticle extends Verticle {
       JsonArray matchingMetrics = query.fromClause().findMatchingMetrics(metrics);
 
       if (matchingMetrics.size() > 0) {
-        StringBuilder logMessageBuilder = new StringBuilder();
-        logMessageBuilder.append("Query '")
+        StringBuilder logMessageBuilder = new StringBuilder()
+          .append("Query '")
           .append(queryKey)
           .append("' matches metrics ");
 
         String separator = "";
 
         for (JsonObject metric : new JsonArrayIterable<JsonObject>(matchingMetrics)) {
-          logMessageBuilder.append(metric.getString("name"));
           logMessageBuilder.append(separator);
+          logMessageBuilder.append(metric.getString("name"));
           separator = ", ";
         }
 

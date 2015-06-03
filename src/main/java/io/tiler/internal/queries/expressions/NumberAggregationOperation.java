@@ -13,7 +13,9 @@ public abstract class NumberAggregationOperation extends AggregationOperation {
         throw new InvalidExpressionException("Left hand value must be a list of numbers");
       }
 
-      numbers.add((Number) value);
+      if (value != null) {
+        numbers.add((Number) value);
+      }
     }
 
     return aggregateNumbers(numbers);

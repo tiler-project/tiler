@@ -1,6 +1,5 @@
 package io.tiler.internal.queries.expressions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MeanOperation extends NumberAggregationOperation {
@@ -14,7 +13,6 @@ public class MeanOperation extends NumberAggregationOperation {
     int count = 0;
 
     for (Number value : values) {
-      System.console().printf(Double.toString(sum));
       sum = sum + value.doubleValue();
       count++;
     }
