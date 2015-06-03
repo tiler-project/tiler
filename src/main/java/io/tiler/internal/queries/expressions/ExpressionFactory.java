@@ -17,6 +17,8 @@ public class ExpressionFactory {
   private static final String NOW_OPERATOR = "$now";
   private static final String MEAN_OPERATOR = "$mean";
   private static final String SUM_OPERATOR = "$sum";
+  private static final String MIN_OPERATOR = "$min";
+  private static final String MAX_OPERATOR = "$max";
   private static final String FIRST_OPERATOR = "$first";
   private static final String LAST_OPERATOR = "$last";
   private static final String MINUS_OPERATOR = "$minus";
@@ -85,6 +87,10 @@ public class ExpressionFactory {
         return new MeanOperation();
       case SUM_OPERATOR:
         return new SumOperation();
+      case MIN_OPERATOR:
+        return new MinOperation();
+      case MAX_OPERATOR:
+        return new MaxOperation();
       case FIRST_OPERATOR:
         return new FirstOperation();
       case LAST_OPERATOR:
