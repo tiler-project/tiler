@@ -107,7 +107,7 @@ public class FromClause {
       } else {
         Pattern pattern = (Pattern) item;
 
-        if (pattern.matcher(metricName).matches()) {
+        if (pattern.matcher(metricName).find()) {
           return true;
         }
       }

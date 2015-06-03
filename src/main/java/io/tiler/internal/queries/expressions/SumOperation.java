@@ -12,7 +12,7 @@ public class SumOperation extends NumberAggregationOperation {
     double sum = 0;
 
     for (Number value : values) {
-      sum = sum + value.doubleValue();
+      sum += value.doubleValue();
     }
 
     return sum;
