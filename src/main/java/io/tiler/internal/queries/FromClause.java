@@ -4,7 +4,7 @@ import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.ExpressionFactory;
 import io.tiler.internal.queries.expressions.InvalidExpressionException;
-import io.tiler.internal.queries.expressions.RegularExpressionOperation;
+import io.tiler.internal.queries.expressions.RegexOperation;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -55,11 +55,11 @@ public class FromClause {
         throw new InvalidQueryException("Invalid from clause in query", e);
       }
 
-      if (expression instanceof RegularExpressionOperation) {
+      if (expression instanceof RegexOperation) {
         containsAtLeastOnePattern = true;
-        RegularExpressionOperation regularExpressionOperation = (RegularExpressionOperation) expression;
+        RegexOperation regexOperation = (RegexOperation) expression;
 
-        items.add(regularExpressionOperation.pattern());
+        items.add(regexOperation.pattern());
       } else {
         Object value;
 

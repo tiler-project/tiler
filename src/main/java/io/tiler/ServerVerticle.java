@@ -692,59 +692,58 @@ public class ServerVerticle extends Verticle {
     JsonArray transformedPoints = new JsonArray();
 
     for (JsonObject point : new JsonArrayIterable<JsonObject>(metric.getArray("points"))) {
-      JsonObject transformedPoint = new JsonObject();
-
-      for (Map.Entry<String, AggregateField> pointClauseEntry : pointClauseEntries) {
-        AggregateField aggregateField = pointClauseEntry.getValue();
-        Object transformedPointFieldValue;
-
-        if (aggregateField.hasExpression()) {
-          Object pointFieldValue = point.getValue(aggregateField.fieldName());
-          Expression expression = aggregateField.expression();
-
-          if (pointFieldValue instanceof JsonArray) {
-            pointFieldValue = ((JsonArray) pointFieldValue).toList();
-          }
-
-          transformedPointFieldValue = expression.evaluate(pointFieldValue);
-        } else {
-          transformedPointFieldValue = point.getValue(aggregateField.fieldName());
-        }
-
-        String transformedPointFieldName = pointClauseEntry.getKey();
-        transformedPoint.putValue(transformedPointFieldName, transformedPointFieldValue);
-      }
-
+      JsonObject transformedPoint = applyProjectionToJsonObject(point, pointClauseEntries);
       transformedPoints.addObject(transformedPoint);
     }
 
     metric.putArray("points", transformedPoints);
   }
 
-  private JsonArray applyMetricClauseToMetrics(Query query, JsonArray metrics) {
+  private JsonArray applyMetricClauseToMetrics(Query query, JsonArray metrics) throws InvalidExpressionException {
     if (!query.hasMetricClause()) {
       logger.info("No projection to apply to metrics");
       return metrics;
     }
 
-    JsonObject metricClause = query.metricClause();
+    Set<Map.Entry<String, AggregateField>> metricClauseEntries = query.metricClause().entrySet();
     JsonArray transformedMetrics = new JsonArray();
 
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      logger.info("Applying projection " + metricClause + " to metric");
-      JsonObject transformedMetric = new JsonObject();
-
-      for (String projectionFieldName : metricClause.getFieldNames()) {
-        String metricFieldName = metricClause.getString(projectionFieldName);
-        transformedMetric.putValue(projectionFieldName, metric.getValue(metricFieldName));
-      }
-
+      JsonObject transformedMetric = applyProjectionToJsonObject(metric, metricClauseEntries);
       transformedMetric.putArray("points", metric.getArray("points"));
 
       transformedMetrics.addObject(transformedMetric);
     }
 
     return transformedMetrics;
+  }
+
+
+  private JsonObject applyProjectionToJsonObject(JsonObject jsonObject, Set<Map.Entry<String, AggregateField>> projectionEntries) throws InvalidExpressionException {
+    JsonObject transformedJsonObject = new JsonObject();
+
+    for (Map.Entry<String, AggregateField> pointClauseEntry : projectionEntries) {
+      AggregateField aggregateField = pointClauseEntry.getValue();
+      Object transformedFieldValue;
+
+      if (aggregateField.hasExpression()) {
+        Object fieldValue = jsonObject.getValue(aggregateField.fieldName());
+        Expression expression = aggregateField.expression();
+
+        if (fieldValue instanceof JsonArray) {
+          fieldValue = ((JsonArray) fieldValue).toList();
+        }
+
+        transformedFieldValue = expression.evaluate(fieldValue);
+      } else {
+        transformedFieldValue = jsonObject.getValue(aggregateField.fieldName());
+      }
+
+      String transformedFieldName = pointClauseEntry.getKey();
+      transformedJsonObject.putValue(transformedFieldName, transformedFieldValue);
+    }
+
+    return transformedJsonObject;
   }
 
   private <T> JsonArray convertCollectionToJsonArray(Collection<T> collection) {

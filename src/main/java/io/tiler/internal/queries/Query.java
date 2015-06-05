@@ -8,14 +8,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Query {
-  private final JsonObject metricClause;
+  private final HashMap<String, AggregateField> metricClause;
   private final HashMap<String, AggregateField> pointClause;
   private final FromClause fromClause;
   private final Map<String, Expression> whereClause;
   private final JsonArray groupClause;
   private final Map<String, Expression> aggregateClause;
 
-  public Query(JsonObject metricClause, HashMap<String, AggregateField> pointClause, FromClause fromClause, Map<String, Expression> whereClause, JsonArray groupClause, Map<String, Expression> aggregateClause) {
+  public Query(HashMap<String, AggregateField> metricClause, HashMap<String, AggregateField> pointClause, FromClause fromClause, Map<String, Expression> whereClause, JsonArray groupClause, Map<String, Expression> aggregateClause) {
     this.metricClause = metricClause;
     this.pointClause = pointClause;
     this.fromClause = fromClause;
@@ -40,58 +40,70 @@ public class Query {
       return null;
     }
 
-    HashMap<String, AggregateField> pointClause = new HashMap<>();
-
-    for (String pointFieldName : pointJsonExpression.getFieldNames()) {
-      Object pointFieldValue = pointJsonExpression.getValue(pointFieldName);
-      AggregateField aggregateField;
-
-      if (pointFieldValue instanceof String) {
-        aggregateField = new AggregateField((String) pointFieldValue);
-      }
-      else if (pointFieldValue instanceof JsonObject) {
-        JsonObject pointFieldValueJsonObject = (JsonObject) pointFieldValue;
-
-        switch (pointFieldValueJsonObject.size()) {
-          case 0:
-            throw new InvalidQueryException("Invalid point clause. No field in object for '" + pointFieldName + "'");
-          case 1:
-            String aggregateFieldName = JsonHelper.getFirstFieldNameFromJsonObject(pointFieldValueJsonObject);
-            Expression expression;
-
-            try {
-              expression = ExpressionFactory.createExpressionFromJsonExpression(
-                pointFieldValueJsonObject.getValue(aggregateFieldName));
-            }
-            catch (InvalidExpressionException e) {
-              throw new InvalidQueryException("Invalid point clause.  Invalid expression for field '" + pointFieldName + "'", e);
-            }
-
-            aggregateField = new AggregateField(aggregateFieldName, expression);
-
-            break;
-          default:
-            throw new InvalidQueryException("Invalid point clause. More than 1 field in object for '" + pointFieldName + "'");
-        }
-      }
-      else {
-        throw new InvalidQueryException("Invalid point clause. Field must be mapped to a string or a JSON object");
-      }
-
-      pointClause.put(pointFieldName, aggregateField);
+    try {
+      return getProjectionClause(pointJsonExpression);
+    } catch (InvalidQueryException e) {
+      throw new InvalidQueryException("Invalid point clause", e);
     }
-
-    return pointClause;
   }
 
-  private static JsonObject getMetricClauseFromQuery(JsonObject query) {
+  private static HashMap<String, AggregateField> getMetricClauseFromQuery(JsonObject query) throws InvalidQueryException {
     JsonObject metricJsonExpression = query.getObject("metric");
 
     if (metricJsonExpression == null) {
       return null;
     }
 
-    return metricJsonExpression;
+    try {
+      return getProjectionClause(metricJsonExpression);
+    } catch (InvalidQueryException e) {
+      throw new InvalidQueryException("Invalid metric clause", e);
+    }
+  }
+
+  private static HashMap<String, AggregateField> getProjectionClause(JsonObject clauseJsonExpression) throws InvalidQueryException {
+    HashMap<String, AggregateField> clause = new HashMap<>();
+
+    for (String fieldName : clauseJsonExpression.getFieldNames()) {
+      Object fieldValue = clauseJsonExpression.getValue(fieldName);
+      AggregateField aggregateField;
+
+      if (fieldValue instanceof String) {
+        aggregateField = new AggregateField((String) fieldValue);
+      }
+      else if (fieldValue instanceof JsonObject) {
+        JsonObject fieldValueJsonObject = (JsonObject) fieldValue;
+
+        switch (fieldValueJsonObject.size()) {
+          case 0:
+            throw new InvalidQueryException("No field in object for '" + fieldName + "'");
+          case 1:
+            String aggregateFieldName = JsonHelper.getFirstFieldNameFromJsonObject(fieldValueJsonObject);
+            Expression expression;
+
+            try {
+              expression = ExpressionFactory.createExpressionFromJsonExpression(
+                fieldValueJsonObject.getValue(aggregateFieldName));
+            }
+            catch (InvalidExpressionException e) {
+              throw new InvalidQueryException("Invalid expression for field '" + fieldName + "'", e);
+            }
+
+            aggregateField = new AggregateField(aggregateFieldName, expression);
+
+            break;
+          default:
+            throw new InvalidQueryException("More than 1 field in object for '" + fieldName + "'");
+        }
+      }
+      else {
+        throw new InvalidQueryException("Field must be mapped to a string or a JSON object");
+      }
+
+      clause.put(fieldName, aggregateField);
+    }
+
+    return clause;
   }
 
   private static FromClause getFromClauseFromQuery(JsonObject query) throws InvalidQueryException {
@@ -164,7 +176,7 @@ public class Query {
     return pointClause;
   }
 
-  public JsonObject metricClause() {
+  public HashMap<String, AggregateField> metricClause() {
     return metricClause;
   }
 

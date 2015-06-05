@@ -28,7 +28,8 @@ public class ExpressionFactory {
   private static final String NOT_OPERATOR = "$not";
   private static final String INTERVALS_OPERATOR = "$intervals";
   private static final String ALL_OPERATOR = "$all";
-  private static final String REGULAR_EXPRESSION_OPERATOR = "$regex";
+  private static final String REGEX_OPERATOR = "$regex";
+  private static final String REPLACE_OPERATOR = "$replace";
 
   private static Iterable<Expression> createExpressionsFromJsonObject(JsonObject jsonObject) throws InvalidExpressionException {
     ArrayList<Expression> expressions = new ArrayList<>();
@@ -57,9 +58,12 @@ public class ExpressionFactory {
       case INTERVALS_OPERATOR:
         checkIsJsonObject(jsonExpression);
         return new IntervalsOperation(createNamedArgumentsFromJsonObject((JsonObject) jsonExpression));
-      case REGULAR_EXPRESSION_OPERATOR:
+      case REGEX_OPERATOR:
         checkIsJsonObject(jsonExpression);
-        return new RegularExpressionOperation(createNamedArgumentsFromJsonObject((JsonObject) jsonExpression));
+        return new RegexOperation(createNamedArgumentsFromJsonObject((JsonObject) jsonExpression));
+      case REPLACE_OPERATOR:
+        checkIsJsonObject(jsonExpression);
+        return new ReplaceOperation(createNamedArgumentsFromJsonObject((JsonObject) jsonExpression));
       case NOT_OPERATOR:
         return new NotOperation(createExpressionFromJsonExpression(jsonExpression));
       case EQUALS_OPERATOR:
