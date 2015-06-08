@@ -5,6 +5,7 @@ import org.vertx.java.core.json.JsonObject;
 public class ConfigFactory {
   public Config load(JsonObject config) {
     return new Config(
+      config.getInteger("port"),
       getRedis(config));
   }
 

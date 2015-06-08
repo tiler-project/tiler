@@ -148,7 +148,7 @@ public class ServerVerticle extends Verticle {
           });
         });
 
-        httpServer.listen(8080, AsyncResultHandlerWrapper.wrap(handler));
+        httpServer.listen(config.port(), AsyncResultHandlerWrapper.wrap(handler));
       })
       .task(handler -> {
         eventBus.registerHandler("io.tiler", (Message<JsonObject> message) -> {
