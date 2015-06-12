@@ -4,7 +4,7 @@ Plugable dashboard framework.  Tiler is a Vert.x based framework that uses React
 
 ## Example
 
-See [tiler-example](https://github.com/tiler-project/tiler-example) for example dashboard created with Tiler.
+See [tiler-example](https://github.com/tiler-project/tiler-example) for an example of how to create a dashboard project with Tiler.
 
 ## Collectors
 
