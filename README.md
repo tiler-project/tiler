@@ -8,7 +8,7 @@ See [tiler-example](https://github.com/tiler-project/tiler-example) for an examp
 
 ## Collectors
 
-There are two ways to get metrics into Tiler: i) using collectors like https://github.com/tiler-project/tiler-collector-sonarqube and ii) using Tiler's API.
+There are two ways to get metrics into Tiler: i) using collectors like [tiler-collector-sonarqube](https://github.com/tiler-project/tiler-collector-sonarqube) and ii) using Tiler's API.
 
 Often the best way to get metrics is to use a collector.  A collector is a vert.x module that pulls metrics into Tiler.  A collector often runs on a schedule, collecting new or updated metrics every few minutes.  See [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Ctiler-collector) for a list of all the collectors available for Tiler.
 
