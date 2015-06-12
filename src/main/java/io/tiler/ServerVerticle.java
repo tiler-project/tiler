@@ -1,5 +1,6 @@
 package io.tiler;
 
+import com.jetdrone.vertx.yoke.IMiddleware;
 import com.jetdrone.vertx.yoke.Yoke;
 import com.jetdrone.vertx.yoke.engine.StringPlaceholderEngine;
 import com.jetdrone.vertx.yoke.middleware.*;
@@ -60,6 +61,7 @@ public class ServerVerticle extends Verticle {
         yoke.use(new BodyParser());
         yoke.use(new Router()
           .get("/", (request, next) -> {
+            // TODO: Replace the redirect with a page that lists all the available dashboards
             request.response().redirect("/dashboards/sample");
           })
           .get("/dashboards/:dashboardName", (request, next) -> {
@@ -69,47 +71,9 @@ public class ServerVerticle extends Verticle {
             request.response().setContentType("text/html", "utf-8")
               .render("dashboard.shtml", next);
           })
-          .post("/api/metrics", (request, next) -> {
-            Object body = request.body();
-            YokeResponse response = request.response();
-
-            if (!(body instanceof JsonObject)) {
-              sendClientError(response, "Request body needs to be a JSON object");
-              return;
-            }
-
-            JsonObject jsonBody = (JsonObject) body;
-
-            // TODO: Move this logic into a method for validating metrics JSON
-            // TODO: Reuse the method for metrics that arrive via the ESB
-            if (!jsonBody.containsField("metrics")) {
-              sendClientError(response, "Request body needs to contain a 'metrics' field");
-              return;
-            }
-
-            Object metrics = jsonBody.getValue("metrics");
-
-            if (!(metrics instanceof JsonArray)) {
-              sendClientError(response, "'metrics' field in request body must be an array");
-              return;
-            }
-
-            JsonArray jsonMetrics = (JsonArray) metrics;
-
-            // TODO: Validate name and points
-
-            saveAndPublishMetrics(jsonMetrics, result -> {
-              if (result.failed()) {
-                logger.info("Metrics could not be saved or published", result.cause());
-                return;
-              }
-
-              logger.info("Metrics saved to Redis and published");
-
-              // TODO: Send a different status code when not successful?
-              response.setStatusCode(204).end();
-            });
-          }));
+          .post("/api/v1/metrics", this::createMetricsMiddleware));
+          // TODO: Implement metric search
+          //.get("/api/v1/metric-search", this::getMetricSearchMiddleware));
         yoke.listen(httpServer);
 
         SockJSServer sockJSServer = vertx.createSockJSServer(httpServer);
@@ -214,6 +178,52 @@ public class ServerVerticle extends Verticle {
         container.logger().info("ServerVerticle started");
         startFuture.setResult(null);
       });
+  }
+
+  private void createMetricsMiddleware(YokeRequest request, Handler<Object> next) {
+    Object body = request.body();
+    YokeResponse response = request.response();
+
+    if (!(body instanceof JsonObject)) {
+      sendClientError(response, "Request body needs to be a JSON object");
+      return;
+    }
+
+    JsonObject jsonBody = (JsonObject) body;
+
+    // TODO: Move this logic into a method for validating metrics JSON
+    // TODO: Reuse the method for metrics that arrive via the ESB
+    if (!jsonBody.containsField("metrics")) {
+      sendClientError(response, "Request body needs to contain a 'metrics' field");
+      return;
+    }
+
+    Object metrics = jsonBody.getValue("metrics");
+
+    if (!(metrics instanceof JsonArray)) {
+      sendClientError(response, "'metrics' field in request body must be an array");
+      return;
+    }
+
+    JsonArray jsonMetrics = (JsonArray) metrics;
+
+    // TODO: Validate name and points
+
+    saveAndPublishMetrics(jsonMetrics, result -> {
+      if (result.failed()) {
+        logger.info("Metrics could not be saved or published", result.cause());
+        return;
+      }
+
+      logger.info("Metrics saved to Redis and published");
+
+      // TODO: Send a different status code when not successful?
+      response.setStatusCode(204).end();
+    });
+  }
+
+  private void getMetricSearchMiddleware(YokeRequest request, Handler<Object> next) {
+
   }
 
   private SocketState createStateForSocket(JsonObject queries) {
