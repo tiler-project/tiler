@@ -54,7 +54,7 @@
     <vertx.testtools.version>2.0.3-final</vertx.testtools.version>
     <junit.version>4.11</junit.version>
     <tiler-core.version>0.1.3</tiler-core.version>
-    <vertx-async.version>0.1.6</vertx-async.version>
+    <vertx-async.version>0.1.7</vertx-async.version>
 
     <!--Plugin versions-->
     <maven.compiler.plugin.version>3.0</maven.compiler.plugin.version>

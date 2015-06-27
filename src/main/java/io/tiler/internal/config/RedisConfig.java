@@ -2,7 +2,7 @@ package io.tiler.internal.config;
 
 import org.vertx.java.core.json.JsonObject;
 
-public class Redis {
+public class RedisConfig {
   private final String address;
   private final String host;
   private final Integer port;
@@ -12,11 +12,11 @@ public class Redis {
   private final Integer select;
   private final String keyPrefix;
 
-  public Redis() {
+  public RedisConfig() {
     this(null, null, null, null, null, null, null, null);
   }
 
-  public Redis(String address, String host, Integer port, String encoding, Boolean binary, String auth, Integer select, String keyPrefix) {
+  public RedisConfig(String address, String host, Integer port, String encoding, Boolean binary, String auth, Integer select, String keyPrefix) {
     if (address == null) {
       address = "io.tiler.redis";
     }

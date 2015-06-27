@@ -6,17 +6,29 @@ public class ConfigFactory {
   public Config load(JsonObject config) {
     return new Config(
       config.getInteger("port"),
-      getRedis(config));
+      getApiConfig(config),
+      getRedisConfig(config));
   }
 
-  private Redis getRedis(JsonObject config) {
+  private ApiConfig getApiConfig(JsonObject config) {
+    JsonObject api = config.getObject("api");
+
+    if (api == null) {
+      return new ApiConfig();
+    }
+
+    return new ApiConfig(
+      api.getBoolean("readOnly"));
+  }
+
+  private RedisConfig getRedisConfig(JsonObject config) {
     JsonObject redis = config.getObject("redis");
 
     if (redis == null) {
-      return new Redis();
+      return new RedisConfig();
     }
 
-    return new Redis(
+    return new RedisConfig(
       redis.getString("address"),
       redis.getString("host"),
       redis.getInteger("port"),

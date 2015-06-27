@@ -1,6 +1,5 @@
 package io.tiler;
 
-import com.jetdrone.vertx.yoke.IMiddleware;
 import com.jetdrone.vertx.yoke.Yoke;
 import com.jetdrone.vertx.yoke.engine.StringPlaceholderEngine;
 import com.jetdrone.vertx.yoke.middleware.*;
@@ -52,14 +51,7 @@ public class ServerVerticle extends Verticle {
       .task(handler -> {
         HttpServer httpServer = vertx.createHttpServer();
 
-        Yoke yoke = new Yoke(vertx);
-        yoke.engine(new StringPlaceholderEngine("views"));
-        yoke.use(new Logger());
-        yoke.use(new ErrorHandler(true));
-        yoke.use(new Favicon());
-        yoke.use("/static", new Static("static"));
-        yoke.use(new BodyParser());
-        yoke.use(new Router()
+        Router router = new Router()
           .get("/", (request, next) -> {
             // TODO: Replace the redirect with a page that lists all the available dashboards
             request.response().redirect("/dashboards/sample");
@@ -70,10 +62,23 @@ public class ServerVerticle extends Verticle {
             request.put("dashboardName", dashboardName);
             request.response().setContentType("text/html", "utf-8")
               .render("dashboard.shtml", next);
-          })
-          .post("/api/v1/metrics", this::createMetricsMiddleware));
-          // TODO: Implement metric search
-          //.get("/api/v1/metric-search", this::getMetricSearchMiddleware));
+          });
+
+        if (!config.api().readOnly()) {
+          router.post("/api/v1/metrics", this::createMetricsMiddleware);
+        }
+
+        // TODO: Implement metric search
+        //.get("/api/v1/metric-search", this::getMetricSearchMiddleware)
+
+        Yoke yoke = new Yoke(vertx);
+        yoke.engine(new StringPlaceholderEngine("views"));
+        yoke.use(new Logger());
+        yoke.use(new ErrorHandler(true));
+        yoke.use(new Favicon());
+        yoke.use("/static", new Static("static"));
+        yoke.use(new BodyParser());
+        yoke.use(router);
         yoke.listen(httpServer);
 
         SockJSServer sockJSServer = vertx.createSockJSServer(httpServer);
