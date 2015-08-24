@@ -2,6 +2,7 @@ package io.tiler.unit.internal.queries
 
 import io.tiler.internal.queries.InvalidQueryException
 import io.tiler.internal.queries.QueryFactory
+import io.tiler.internal.queries.expressions.aggregations.AllFunction
 import io.tiler.internal.queries.expressions.arithmetic.AdditionOperation
 import io.tiler.internal.queries.expressions.arithmetic.DivisionOperation
 import io.tiler.internal.queries.expressions.arithmetic.MultiplicationOperation
@@ -12,7 +13,11 @@ import io.tiler.internal.queries.expressions.comparisons.NotEqualsOperation
 import io.tiler.internal.queries.expressions.comparisons.RegexMatchOperation
 import io.tiler.internal.queries.expressions.constants.ConstantExpression
 import io.tiler.internal.queries.expressions.functions.ConcatFunction
+import io.tiler.internal.queries.expressions.functions.FirstFunction
+import io.tiler.internal.queries.expressions.functions.LastFunction
+import io.tiler.internal.queries.expressions.functions.MaxFunction
 import io.tiler.internal.queries.expressions.functions.MeanFunction
+import io.tiler.internal.queries.expressions.functions.MinFunction
 import io.tiler.internal.queries.expressions.functions.NowFunction
 import io.tiler.internal.queries.expressions.functions.ReplaceFunction
 import io.tiler.internal.queries.RegexMetricExpression
@@ -291,7 +296,7 @@ class QueryFactorySpec extends Specification {
     groupClauseFieldExpressions[1].fieldName() == "fieldName2"
   }
 
-  def "aggregate clause with a single aggregation"() {
+  def "aggregate clause with an interval aggregation"() {
     def queryText = """
       from metric.name
       aggregate interval(fieldName, 0, 1000) as newFieldName
@@ -311,6 +316,22 @@ class QueryFactorySpec extends Specification {
     aggregateExpression.offset().value() == 0
     aggregateExpression.size() instanceof ConstantExpression
     aggregateExpression.size().value() == 1000
+  }
+
+  def "aggregate clause with an all aggregation"() {
+    def queryText = """
+      from metric.name
+      aggregate all() as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def namedAggregateExpressions = query.aggregateClause().namedAggregateExpressions()
+    namedAggregateExpressions.size() == 1
+    def aggregateExpression = namedAggregateExpressions["newFieldName"]
+    aggregateExpression instanceof AllFunction
   }
 
   def "aggregate clause with multiple aggregations"() {
@@ -495,10 +516,10 @@ class QueryFactorySpec extends Specification {
     expression.replacement().value() == "two"
   }
 
-  def "mean function"() {
+  def "simple number list function"() {
     def queryText = """
       from metric.name
-      point mean(fieldName) as newFieldName
+      point $functionName(fieldName) as newFieldName
     """
 
     when:
@@ -506,9 +527,17 @@ class QueryFactorySpec extends Specification {
 
     then:
     def expression = query.pointClause().namedExpressions()["newFieldName"]
-    expression instanceof MeanFunction
+    expression.class == functionClass
     expression.list() instanceof FieldExpression
     expression.list().fieldName() == "fieldName"
+
+    where:
+    functionName | functionClass
+    "mean"       | MeanFunction
+    "min"        | MinFunction
+    "max"        | MaxFunction
+    "first"      | FirstFunction
+    "last"       | LastFunction
   }
 
   def "concat function with one parameter"() {

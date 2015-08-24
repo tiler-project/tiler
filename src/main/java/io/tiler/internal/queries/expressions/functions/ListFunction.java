@@ -44,5 +44,5 @@ public abstract class ListFunction<T> extends Function {
     return applyToList(typedList);
   }
 
-  public abstract Object applyToList(List<T> list);
+  public abstract Object applyToList(List<T> list) throws EvaluationException;
 }

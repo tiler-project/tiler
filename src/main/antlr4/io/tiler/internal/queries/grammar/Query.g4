@@ -8,8 +8,11 @@ aggregateClause : AGGREGATE exprs+=aggregateExpr AS names+=ID (',' exprs+=aggreg
 pointClause : POINT namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 metricClause : METRIC namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 
-aggregateExpr : func=intervalFunc ;
-intervalFunc : 'interval(' value=expr ',' offset=expr ',' size=expr ')' ;
+aggregateExpr : func=intervalFunc # IntervalFuncExpr
+              | func=allFunc      # AllFuncExpr
+              ;
+intervalFunc : INTERVAL '(' value=expr ',' offset=expr ',' size=expr ')' ;
+allFunc : ALL '()' ;
 expr : ID                                                                                     # Field
      | constant=INT                                                                           # Constant
      | constant=STRING                                                                        # Constant
@@ -18,6 +21,10 @@ expr : ID                                                                       
      | func=nowFunc                                                                           # NowFuncExpr
      | func=replaceFunc                                                                       # ReplaceFuncExpr
      | func=meanFunc                                                                          # MeanFuncExpr
+     | func=minFunc                                                                           # MinFuncExpr
+     | func=maxFunc                                                                           # MaxFuncExpr
+     | func=firstFunc                                                                         # FirstFuncExpr
+     | func=lastFunc                                                                          # LastFuncExpr
      | func=concatFunc                                                                        # ConcatFuncExpr
      | expr op=(ASTERISK | FORWARD_SLASH) expr                                                # BinaryOp
      | expr op=(PLUS | MINUS) expr                                                            # BinaryOp
@@ -30,6 +37,10 @@ expr : ID                                                                       
 nowFunc : NOW '()' ;
 replaceFunc : REPLACE '(' value=expr ',' regex=expr ',' replacement=expr ')' ;
 meanFunc : MEAN '(' value=expr ')' ;
+minFunc : MIN '(' value=expr ')' ;
+maxFunc : MAX '(' value=expr ')' ;
+firstFunc : FIRST '(' value=expr ')' ;
+lastFunc : LAST '(' value=expr ')' ;
 concatFunc : CONCAT '(' params+=expr (',' params+=expr)* ')' ;
 metricExpr : ID
            | REGEX ;
@@ -42,9 +53,15 @@ GROUP : 'group' ;
 AGGREGATE : 'aggregate' ;
 POINT : 'point' ;
 METRIC : 'metric' ;
+INTERVAL : 'interval' ;
+ALL : 'all' ;
 NOW : 'now' ;
 REPLACE : 'replace' ;
 MEAN : 'mean' ;
+MIN : 'min' ;
+MAX : 'max' ;
+FIRST : 'first' ;
+LAST : 'last' ;
 CONCAT : 'concat' ;
 AND : 'and' ;
 OR : 'or' ;
