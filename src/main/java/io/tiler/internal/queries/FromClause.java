@@ -1,87 +1,34 @@
 package io.tiler.internal.queries;
 
 import io.tiler.core.json.JsonArrayIterable;
-import io.tiler.internal.queries.expressions.Expression;
-import io.tiler.internal.queries.expressions.ExpressionFactory;
-import io.tiler.internal.queries.expressions.InvalidExpressionException;
-import io.tiler.internal.queries.expressions.RegexOperation;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class FromClause {
-  private final ArrayList<Object> items;
+  private List<MetricExpression> metricExpressions;
   private final boolean containsAtLeastOnePattern;
 
-  protected FromClause() {
-    items = new ArrayList<>();
-    containsAtLeastOnePattern = false;
-  }
+  public FromClause(List<MetricExpression> metricExpressions) {
+    this.metricExpressions = Collections.unmodifiableList(metricExpressions);
+    boolean containsAtLeastOnePattern = false;
 
-  protected FromClause(Collection<Object> items, boolean containsAtLeastOnePattern) {
-    this.items = new ArrayList<>(items);
+    for (MetricExpression item : metricExpressions) {
+      if (item instanceof RegexMetricExpression) {
+        containsAtLeastOnePattern = true;
+        break;
+      }
+    }
+
     this.containsAtLeastOnePattern = containsAtLeastOnePattern;
   }
 
-  public static FromClause fromJsonExpression(Object jsonExpression) throws InvalidQueryException {
-    if (jsonExpression == null) {
-      return new FromClause();
-    }
-
-    JsonArray jsonItems;
-
-    if (jsonExpression instanceof JsonArray) {
-      jsonItems = (JsonArray)jsonExpression;
-    }
-    else {
-      jsonItems = new JsonArray();
-      jsonItems.add(jsonExpression);
-    }
-
-    ArrayList<Object> items = new ArrayList<>();
-    boolean containsAtLeastOnePattern = false;
-
-    for (Object jsonItem : jsonItems) {
-      Expression expression;
-
-      try {
-        expression = ExpressionFactory.createExpressionFromJsonExpression(jsonItem);
-      } catch (InvalidExpressionException e) {
-        throw new InvalidQueryException("Invalid from clause in query", e);
-      }
-
-      if (expression instanceof RegexOperation) {
-        containsAtLeastOnePattern = true;
-        RegexOperation regexOperation = (RegexOperation) expression;
-
-        items.add(regexOperation.pattern());
-      } else {
-        Object value;
-
-        try {
-          value = expression.evaluate(null);
-        } catch (InvalidExpressionException e) {
-          throw new InvalidQueryException("Invalid from clause in query", e);
-        }
-
-        if (!(value instanceof String)) {
-          throw new InvalidQueryException("Items in from clause must be strings or regular expressions");
-        }
-
-        items.add(value);
-      }
-    }
-
-    return new FromClause(items, containsAtLeastOnePattern);
-  }
-
-  public List<Object> items() {
-    return items;
+  public List<MetricExpression> metricExpressions() {
+    return metricExpressions;
   }
 
   public boolean isPotentiallyMissingAnyMetrics(Set<String> metricNames) {
@@ -89,8 +36,10 @@ public class FromClause {
       return true;
     }
 
-    for (Object item : items) {
-      if (!metricNames.contains(item)) {
+    for (MetricExpression item : metricExpressions) {
+      SimpleMetricExpression item2 = (SimpleMetricExpression)item;
+
+      if (!metricNames.contains(item2.metricName())) {
         return true;
       }
     }
@@ -99,15 +48,17 @@ public class FromClause {
   }
 
   public boolean matchesMetricName(String metricName) {
-    for (Object item : items) {
-      if (item instanceof String) {
-        if (metricName.equals(item)) {
+    for (Object item : metricExpressions) {
+      if (item instanceof SimpleMetricExpression) {
+        SimpleMetricExpression item2 = (SimpleMetricExpression) item;
+
+        if (metricName.equals(item2.metricName())) {
           return true;
         }
       } else {
-        Pattern pattern = (Pattern) item;
+        RegexMetricExpression item2 = (RegexMetricExpression) item;
 
-        if (pattern.matcher(metricName).find()) {
+        if (item2.pattern().matcher(metricName).find()) {
           return true;
         }
       }

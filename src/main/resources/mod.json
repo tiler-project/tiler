@@ -14,5 +14,5 @@
   "homepage": "https://github.com/tiler-project/tiler",
 
   "auto-redeploy": true,
-  "includes": "io.tiler~tiler-core~0.1.3,org.simondean.vertx~vertx-async~0.1.7,io.vertx~mod-redis~1.1.4,io.vertx~mod-redis-client~1.1.4,com.jetdrone~yoke~2.0.17"
+  "includes": "io.tiler~tiler-core~0.1.4,org.simondean.vertx~vertx-async~0.1.7,io.vertx~mod-redis~1.1.4,io.vertx~mod-redis-client~1.1.4,com.jetdrone~yoke~2.0.17"
 }

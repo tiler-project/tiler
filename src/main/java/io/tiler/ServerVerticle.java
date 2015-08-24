@@ -8,12 +8,7 @@ import io.tiler.internal.RedisException;
 import io.tiler.internal.SocketState;
 import io.tiler.internal.config.Config;
 import io.tiler.internal.config.ConfigFactory;
-import io.tiler.internal.queries.AggregateField;
-import io.tiler.internal.queries.FromClause;
-import io.tiler.internal.queries.InvalidQueryException;
-import io.tiler.internal.queries.Query;
-import io.tiler.internal.queries.expressions.Expression;
-import io.tiler.internal.queries.expressions.InvalidExpressionException;
+import io.tiler.internal.queries.*;
 import io.vertx.java.redis.RedisClient;
 import org.simondean.vertx.async.Async;
 import org.simondean.vertx.async.AsyncResultHandlerWrapper;
@@ -38,6 +33,7 @@ public class ServerVerticle extends Verticle {
   private org.vertx.java.core.logging.Logger logger;
   private EventBus eventBus;
   private RedisClient redis;
+  private QueryFactory queryFactory;
   private final HashMap<SockJSSocket, SocketState> socketStates = new HashMap<>();
 
   public void start(Future<Void> startFuture) {
@@ -45,6 +41,7 @@ public class ServerVerticle extends Verticle {
     logger = container.logger();
     eventBus = vertx.eventBus();
     redis = new RedisClient(eventBus, config.redis().address());
+    queryFactory = new QueryFactory();
 
     Async.series()
       .task(handler -> container.deployModule("io.vertx~mod-redis~1.1.4", config.redis().toRedisModuleConfig(), 1, AsyncResultHandlerWrapper.wrap(handler)))
@@ -240,7 +237,7 @@ public class ServerVerticle extends Verticle {
       Query query = null;
 
       try {
-        query = Query.fromJsonObject(queries.getObject(key));
+        query = queryFactory.parseQuery(queries.getString(key));
       } catch (InvalidQueryException e) {
         logger.error("Received invalid query from socket", e);
       }
@@ -371,8 +368,8 @@ public class ServerVerticle extends Verticle {
         JsonArray transformedMetrics = null;
 
         try {
-          transformedMetrics = applyQueryToMetrics(query, matchingMetrics);
-        } catch (InvalidExpressionException e) {
+          transformedMetrics = query.applyToMetrics(matchingMetrics);
+        } catch (EvaluationException e) {
           logger.error("Invalid query expression", e);
         }
 
@@ -541,262 +538,5 @@ public class ServerVerticle extends Verticle {
     }
 
     return false;
-  }
-
-  private JsonArray applyQueryToMetrics(Query query, JsonArray metrics) throws InvalidExpressionException {
-    JsonArray transformedMetrics = copyMetrics(metrics);
-    applyWhereClauseToMetrics(query, transformedMetrics);
-    transformedMetrics = applyGroupClauseToMetrics(query, transformedMetrics);
-    applyAggregateClauseToMetrics(query, transformedMetrics);
-    applyPointClauseToMetrics(query, transformedMetrics);
-    transformedMetrics = applyMetricClauseToMetrics(query, transformedMetrics);
-
-    return transformedMetrics;
-  }
-
-  private JsonArray copyMetrics(JsonArray metrics) {
-    return metrics.copy();
-  }
-
-  private void applyWhereClauseToMetrics(Query query, JsonArray metrics) throws InvalidExpressionException {
-    for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      applyWhereClauseToMetric(query, metric);
-    }
-  }
-
-  private void applyWhereClauseToMetric(Query query, JsonObject metric) throws InvalidExpressionException {
-    Map<String, Expression> whereClause = query.whereClause();
-    JsonArray matchingPoints = new JsonArray();
-
-    for (JsonObject point : new JsonArrayIterable<JsonObject>(metric.getArray("points"))) {
-      if (pointMatchesWhereClause(point, whereClause)) {
-        matchingPoints.addObject(point);
-      }
-    }
-
-    metric.putArray("points", matchingPoints);
-  }
-
-  private JsonArray applyGroupClauseToMetrics(Query query, JsonArray metrics) {
-    if (!query.hasGroupClause()) {
-      return metrics;
-    }
-
-    JsonArray groups = applyGroupClauseToPoints(query.groupClause(), metrics);
-    JsonArray transformedMetrics = new JsonArray();
-
-    for (JsonObject group : new JsonArrayIterable<JsonObject>(groups)) {
-      transformedMetrics.addObject(new JsonObject()
-        .mergeIn(group)
-        .putArray("points", group.getArray("points")));
-    }
-
-    return transformedMetrics;
-  }
-
-  private JsonArray applyGroupClauseToPoints(JsonArray groupClause, JsonArray metrics) {
-    HashMap<ArrayList<Object>, JsonObject> groups = new HashMap<>();
-
-    for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      for (JsonObject point : new JsonArrayIterable<JsonObject>(metric.getArray("points"))) {
-        ArrayList<Object> groupKey = new ArrayList<>();
-
-        for (String groupFieldName : new JsonArrayIterable<String>(groupClause)) {
-          groupKey.add(groupFieldName);
-          groupKey.add(point.getValue(groupFieldName));
-        }
-
-        JsonObject group = groups.get(groupKey);
-        JsonArray groupPoints;
-
-        if (group == null) {
-          groupPoints = new JsonArray();
-          group = new JsonObject();
-
-          for (String groupFieldName : new JsonArrayIterable<String>(groupClause)) {
-            group.putValue(groupFieldName, point.getValue(groupFieldName));
-          }
-
-          group.putArray("points", groupPoints);
-          groups.put(groupKey, group);
-        } else {
-          groupPoints = group.getArray("points");
-        }
-
-        groupPoints.addObject(point);
-      }
-    }
-
-    return convertCollectionToJsonArray(groups.values());
-  }
-
-  private void applyAggregateClauseToMetrics(Query query, JsonArray metrics) throws InvalidExpressionException {
-    if (!query.hasAggregateClause()) {
-      return;
-    }
-
-    Map<String, Expression> aggregateClause = query.aggregateClause();
-
-    for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      JsonArray transformedPoints = applyAggregateClauseToPoints(aggregateClause, metric.getArray("points"));
-      metric.putArray("points", transformedPoints);
-    }
-  }
-
-  private JsonArray applyAggregateClauseToPoints(Map<String, Expression> aggregateClause, JsonArray points) throws InvalidExpressionException {
-    // TODO: Maybe combine this method with the equivalent for the group clause
-    Set<Map.Entry<String, Expression>> aggregateClauseEntries = aggregateClause.entrySet();
-    Set<String> aggregateClauseFieldNames = aggregateClause.keySet();
-    HashMap<ArrayList<Object>, JsonObject> aggregatePoints = new HashMap<>();
-
-    for (JsonObject point : new JsonArrayIterable<JsonObject>(points)) {
-      ArrayList<Object> aggregateKey = new ArrayList<>();
-
-      for (Map.Entry<String, Expression> aggregateClauseEntry : aggregateClauseEntries) {
-        String fieldName = aggregateClauseEntry.getKey();
-        Expression expression = aggregateClauseEntry.getValue();
-        Object aggregateValue = expression.evaluate(point.getValue(fieldName));
-
-        aggregateKey.add(fieldName);
-        aggregateKey.add(aggregateValue);
-      }
-
-      JsonObject aggregatePoint = aggregatePoints.get(aggregateKey);
-
-      if (aggregatePoint == null) {
-        aggregatePoint = new JsonObject();
-
-        for (int index = 0, count = aggregateKey.size(); index < count; index += 2) {
-          aggregatePoint.putValue((String) aggregateKey.get(index), aggregateKey.get(index + 1));
-        }
-
-        aggregatePoints.put(aggregateKey, aggregatePoint);
-      }
-
-      for (String pointFieldName : point.getFieldNames()) {
-        if (!aggregateClauseFieldNames.contains(pointFieldName)) {
-          JsonArray aggregatePointFieldValue = aggregatePoint.getArray(pointFieldName);
-
-          if (aggregatePointFieldValue == null) {
-            aggregatePointFieldValue = new JsonArray();
-            aggregatePoint.putArray(pointFieldName, aggregatePointFieldValue);
-          }
-
-          aggregatePointFieldValue.add(point.getValue(pointFieldName));
-        }
-      }
-    }
-
-    return convertCollectionToJsonArray(aggregatePoints.values());
-  }
-
-  private void applyPointClauseToMetrics(Query query, JsonArray metrics) throws InvalidExpressionException {
-    if (!query.hasPointClause()) {
-      return;
-    }
-
-    HashMap<String, AggregateField> pointClause = query.pointClause();
-
-    for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      applyPointClauseToPoints(pointClause, metric);
-    }
-  }
-
-  private void applyPointClauseToPoints(HashMap<String, AggregateField> pointClause, JsonObject metric) throws InvalidExpressionException {
-    Set<Map.Entry<String, AggregateField>> pointClauseEntries = pointClause.entrySet();
-    JsonArray transformedPoints = new JsonArray();
-
-    for (JsonObject point : new JsonArrayIterable<JsonObject>(metric.getArray("points"))) {
-      JsonObject transformedPoint = applyProjectionToJsonObject(point, pointClauseEntries);
-      transformedPoints.addObject(transformedPoint);
-    }
-
-    metric.putArray("points", transformedPoints);
-  }
-
-  private JsonArray applyMetricClauseToMetrics(Query query, JsonArray metrics) throws InvalidExpressionException {
-    if (!query.hasMetricClause()) {
-      logger.info("No projection to apply to metrics");
-      return metrics;
-    }
-
-    Set<Map.Entry<String, AggregateField>> metricClauseEntries = query.metricClause().entrySet();
-    JsonArray transformedMetrics = new JsonArray();
-
-    for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      JsonObject transformedMetric = applyProjectionToJsonObject(metric, metricClauseEntries);
-      transformedMetric.putArray("points", metric.getArray("points"));
-
-      transformedMetrics.addObject(transformedMetric);
-    }
-
-    return transformedMetrics;
-  }
-
-
-  private JsonObject applyProjectionToJsonObject(JsonObject jsonObject, Set<Map.Entry<String, AggregateField>> projectionEntries) throws InvalidExpressionException {
-    JsonObject transformedJsonObject = new JsonObject();
-
-    for (Map.Entry<String, AggregateField> pointClauseEntry : projectionEntries) {
-      AggregateField aggregateField = pointClauseEntry.getValue();
-      Object transformedFieldValue;
-
-      if (aggregateField.hasExpression()) {
-        Object fieldValue = jsonObject.getValue(aggregateField.fieldName());
-        Expression expression = aggregateField.expression();
-
-        if (fieldValue instanceof JsonArray) {
-          fieldValue = ((JsonArray) fieldValue).toList();
-        }
-
-        transformedFieldValue = expression.evaluate(fieldValue);
-      } else {
-        transformedFieldValue = jsonObject.getValue(aggregateField.fieldName());
-      }
-
-      String transformedFieldName = pointClauseEntry.getKey();
-      transformedJsonObject.putValue(transformedFieldName, transformedFieldValue);
-    }
-
-    return transformedJsonObject;
-  }
-
-  private <T> JsonArray convertCollectionToJsonArray(Collection<T> collection) {
-    JsonArray jsonArray = new JsonArray();
-
-    collection.forEach(jsonArray::add);
-
-    return jsonArray;
-  }
-
-  private boolean pointMatchesWhereClause(JsonObject point, Map<String, Expression> where) throws InvalidExpressionException {
-    // TODO: Move method to WhereClause class
-
-    if (where == null) {
-      return true;
-    }
-
-    boolean isMatch = true;
-
-    for (Map.Entry<String, Expression> whereClauseEntry : where.entrySet()) {
-      String fieldName = whereClauseEntry.getKey();
-      Expression expression = whereClauseEntry.getValue();
-      Object pointFieldValue = point.getValue(fieldName);
-
-      Object result = expression.evaluate(pointFieldValue);
-
-      if (result == null || !(result instanceof Boolean)) {
-        isMatch = false;
-      }
-      else {
-        isMatch = (boolean) result;
-      }
-
-      if (!isMatch) {
-        break;
-      }
-    }
-
-    return isMatch;
   }
 }

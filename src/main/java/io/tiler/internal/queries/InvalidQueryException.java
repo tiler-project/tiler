@@ -1,18 +1,22 @@
 package io.tiler.internal.queries;
 
+import java.util.List;
+
 public class InvalidQueryException extends Exception {
-  public InvalidQueryException() {
+  private final String query;
+  private final List<QueryError> errors;
+
+  public InvalidQueryException(String query, List<QueryError> errors) {
+    super(QueryErrorFormatter.format(query, errors));
+    this.query = query;
+    this.errors = errors;
   }
 
-  public InvalidQueryException(String message) {
-    super(message);
+  public String getQuery() {
+    return query;
   }
 
-  public InvalidQueryException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  public InvalidQueryException(Throwable cause) {
-    super(cause);
+  public List<QueryError> getErrors() {
+    return errors;
   }
 }
