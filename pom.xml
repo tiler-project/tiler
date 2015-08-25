@@ -6,7 +6,7 @@
   <groupId>io.tiler</groupId>
   <artifactId>tiler</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.20-SNAPSHOT</version>
+  <version>0.1.20</version>
   <name>Tiler</name>
   <description>Plugable dashboard framework</description>
   <url>https://github.com/tiler-project/tiler</url>
