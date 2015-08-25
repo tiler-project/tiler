@@ -5,6 +5,7 @@ import io.tiler.internal.queries.expressions.constants.ConstantExpression
 import io.tiler.internal.queries.expressions.functions.MaxFunction
 import io.tiler.internal.queries.expressions.functions.MeanFunction
 import io.tiler.internal.queries.expressions.functions.MinFunction
+import io.tiler.internal.queries.expressions.functions.SumFunction
 import io.tiler.unit.internal.queries.expressions.builders.EvaluationContextBuilder
 import spock.lang.*
 
@@ -30,9 +31,10 @@ class NumberListFunctionSpec extends Specification {
     MeanFunction  | 2.5
     MinFunction   | 1
     MaxFunction   | 4
+    SumFunction   | 10
   }
 
-  def "it evaluates to NaN when provided with an empty list"() {
+  def "it evaluates an empty list"() {
     given:
     def list = []
     def function = functionClass.newInstance([
@@ -40,13 +42,17 @@ class NumberListFunctionSpec extends Specification {
       new ConstantExpression(queryContext, list)] as Object[])
 
     when:
-    def result = function.evaluate(context)
+    def actualResult = function.evaluate(context)
 
     then:
-    result == Double.NaN
+    actualResult == result
 
     where:
-    functionClass << [MeanFunction, MinFunction, MaxFunction]
+    functionClass | result
+    MeanFunction  | Double.NaN
+    MinFunction   | Double.NaN
+    MaxFunction   | Double.NaN
+    SumFunction   | 0
   }
 
   def "it validates the list is actually a list"() {
@@ -63,7 +69,7 @@ class NumberListFunctionSpec extends Specification {
     e.message == "Line 1:2\nquery\n  ^ list must evaluate to a List"
 
     where:
-    functionClass << [MeanFunction, MinFunction, MaxFunction]
+    functionClass << [MeanFunction, MinFunction, MaxFunction, SumFunction]
   }
 
   def "it validates the items in the list are numbers"() {
@@ -81,6 +87,6 @@ class NumberListFunctionSpec extends Specification {
     e.message == "Line 1:2\nquery\n  ^ items in list must be numbers"
 
     where:
-    functionClass << [MeanFunction, MinFunction, MaxFunction]
+    functionClass << [MeanFunction, MinFunction, MaxFunction, SumFunction]
   }
 }

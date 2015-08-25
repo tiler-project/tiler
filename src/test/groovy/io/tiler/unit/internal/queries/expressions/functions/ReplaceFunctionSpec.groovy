@@ -11,9 +11,9 @@ import java.util.regex.Pattern
 
 class ReplaceFunctionSpec extends Specification {
   @Shared queryContext = new QueryContext("query", 1, 2)
-  @Shared validValue = new ConstantExpression(queryContext, "value")
-  @Shared validRegex = new ConstantExpression(queryContext, Pattern.compile("regex"))
-  @Shared validReplacement = new ConstantExpression(queryContext, "replacement")
+  @Shared validValue = "value"
+  @Shared validRegex = Pattern.compile("regex")
+  @Shared validReplacement = "replacement"
   def context = new EvaluationContextBuilder().build()
 
   def "it replaces a value in a string"() {
@@ -61,9 +61,13 @@ class ReplaceFunctionSpec extends Specification {
     result == "three three"
   }
 
-  def "it validates the types of the parameters"() {
+  def "it validates the parameters"() {
     given:
-    def function = new ReplaceFunction(queryContext, value, regex, replacement)
+    def function = new ReplaceFunction(
+      queryContext,
+      new ConstantExpression(queryContext, value),
+      new ConstantExpression(queryContext, regex),
+      new ConstantExpression(queryContext, replacement))
 
     when:
     function.evaluate(context)
@@ -73,27 +77,12 @@ class ReplaceFunctionSpec extends Specification {
     e.message == "Line 1:2\nquery\n  ^ $message"
 
     where:
-    value << [new ConstantExpression(queryContext, 1), validValue, validValue]
-    regex << [validRegex, new ConstantExpression(queryContext, 1), validRegex]
-    replacement << [validReplacement, validReplacement, new ConstantExpression(queryContext, 1)]
-    message << ["value must be a String", "regex must be a Pattern", "replacement must be a String"]
-  }
-
-  def "it validates the parameters are not null"() {
-    given:
-    def function = new ReplaceFunction(queryContext, value, regex, replacement)
-
-    when:
-    function.evaluate(context)
-
-    then:
-    def e = thrown(EvaluationException)
-    e.message == "Line 1:2\nquery\n  ^ $message"
-
-    where:
-    value << [new ConstantExpression(queryContext, null), validValue, validValue]
-    regex << [validRegex, new ConstantExpression(queryContext, null), validRegex]
-    replacement << [validReplacement, validReplacement, new ConstantExpression(queryContext, null)]
-    message << ["value cannot be null", "regex cannot be null", "replacement cannot be null"]
+    value      | regex      | replacement      | message
+    1          | validRegex | validReplacement | "value must be a String"
+    validValue | 1          | validReplacement | "regex must be a Pattern"
+    validValue | validRegex | 1                | "replacement must be a String"
+    null       | validRegex | validReplacement | "value cannot be null"
+    validValue | null       | validReplacement | "regex cannot be null"
+    validValue | validRegex | null             | "replacement cannot be null"
   }
 }

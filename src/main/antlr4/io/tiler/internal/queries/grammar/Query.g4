@@ -20,9 +20,11 @@ expr : ID                                                                       
      | constant=REGEX                                                                         # Constant
      | func=nowFunc                                                                           # NowFuncExpr
      | func=replaceFunc                                                                       # ReplaceFuncExpr
+     | func=substringFunc                                                                     # SubstringFuncExpr
      | func=meanFunc                                                                          # MeanFuncExpr
      | func=minFunc                                                                           # MinFuncExpr
      | func=maxFunc                                                                           # MaxFuncExpr
+     | func=sumFunc                                                                           # SumFuncExpr
      | func=firstFunc                                                                         # FirstFuncExpr
      | func=lastFunc                                                                          # LastFuncExpr
      | func=concatFunc                                                                        # ConcatFuncExpr
@@ -36,9 +38,11 @@ expr : ID                                                                       
      ;
 nowFunc : NOW '()' ;
 replaceFunc : REPLACE '(' value=expr ',' regex=expr ',' replacement=expr ')' ;
+substringFunc : SUBSTRING '(' value=expr ',' beginIndex=expr ',' endIndex=expr ')' ;
 meanFunc : MEAN '(' value=expr ')' ;
 minFunc : MIN '(' value=expr ')' ;
 maxFunc : MAX '(' value=expr ')' ;
+sumFunc : SUM '(' value=expr ')' ;
 firstFunc : FIRST '(' value=expr ')' ;
 lastFunc : LAST '(' value=expr ')' ;
 concatFunc : CONCAT '(' params+=expr (',' params+=expr)* ')' ;
@@ -57,9 +61,11 @@ INTERVAL : 'interval' ;
 ALL : 'all' ;
 NOW : 'now' ;
 REPLACE : 'replace' ;
+SUBSTRING : 'substring' ;
 MEAN : 'mean' ;
 MIN : 'min' ;
 MAX : 'max' ;
+SUM : 'sum' ;
 FIRST : 'first' ;
 LAST : 'last' ;
 CONCAT : 'concat' ;

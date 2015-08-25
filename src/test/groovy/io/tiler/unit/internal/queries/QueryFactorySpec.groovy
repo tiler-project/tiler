@@ -27,6 +27,8 @@ import io.tiler.internal.queries.expressions.arithmetic.SubtractionOperation
 import io.tiler.internal.queries.expressions.comparisons.EqualsOperation
 import io.tiler.internal.queries.expressions.comparisons.GreaterThanOrEqualsOperation
 import io.tiler.internal.queries.expressions.fields.FieldExpression
+import io.tiler.internal.queries.expressions.functions.SubstringFunction
+import io.tiler.internal.queries.expressions.functions.SumFunction
 import io.tiler.internal.queries.expressions.logical.AndOperation
 import io.tiler.internal.queries.expressions.logical.OrOperation
 import spock.lang.*
@@ -536,6 +538,7 @@ class QueryFactorySpec extends Specification {
     "mean"       | MeanFunction
     "min"        | MinFunction
     "max"        | MaxFunction
+    "sum"        | SumFunction
     "first"      | FirstFunction
     "last"       | LastFunction
   }
@@ -576,6 +579,26 @@ class QueryFactorySpec extends Specification {
     expression.parameters()[1].value() == ", "
     expression.parameters()[2] instanceof FieldExpression
     expression.parameters()[2].fieldName() == "fieldName2"
+  }
+
+  def "substring function"() {
+    def queryText = """
+      from metric.name
+      point substring(fieldName, 1, 2) as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def expression = query.pointClause().namedExpressions()["newFieldName"]
+    expression instanceof SubstringFunction
+    expression.value() instanceof FieldExpression
+    expression.value().fieldName() == "fieldName"
+    expression.beginIndex() instanceof ConstantExpression
+    expression.beginIndex().value() == 1
+    expression.endIndex() instanceof ConstantExpression
+    expression.endIndex().value() == 2
   }
 
   def "all clauses"() {

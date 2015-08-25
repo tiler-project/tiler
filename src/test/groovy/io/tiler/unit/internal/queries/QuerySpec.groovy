@@ -9,7 +9,7 @@ import spock.lang.*
 class QuerySpec extends Specification {
   def factory = new QueryFactory()
 
-  def "it handles an evaluation eception"() {
+  def "it handles an evaluation exception"() {
     def queryText = "from metric.name\n" +
                     "where true and 1"
     def query = factory.parseQuery(queryText)

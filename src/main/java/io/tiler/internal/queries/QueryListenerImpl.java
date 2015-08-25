@@ -378,6 +378,16 @@ public class QueryListenerImpl implements QueryListener {
     expressions.put(ctx, expressions.get(ctx.lastFunc()));
   }
 
+  @Override
+  public void enterSubstringFuncExpr(QueryParser.SubstringFuncExprContext ctx) {
+
+  }
+
+  @Override
+  public void exitSubstringFuncExpr(QueryParser.SubstringFuncExprContext ctx) {
+    expressions.put(ctx, expressions.get(ctx.substringFunc()));
+  }
+
   private Expression createRegexConstantExpression(Token regexToken) {
     Expression expression;
     try {
@@ -396,6 +406,15 @@ public class QueryListenerImpl implements QueryListener {
   @Override
   public void exitMeanFuncExpr(QueryParser.MeanFuncExprContext ctx) {
     expressions.put(ctx, expressions.get(ctx.meanFunc()));
+  }
+
+  @Override
+  public void enterSumFuncExpr(QueryParser.SumFuncExprContext ctx) {
+  }
+
+  @Override
+  public void exitSumFuncExpr(QueryParser.SumFuncExprContext ctx) {
+    expressions.put(ctx, expressions.get(ctx.sumFunc()));
   }
 
   @Override
@@ -522,6 +541,21 @@ public class QueryListenerImpl implements QueryListener {
   }
 
   @Override
+  public void enterSubstringFunc(QueryParser.SubstringFuncContext ctx) {
+
+  }
+
+  @Override
+  public void exitSubstringFunc(QueryParser.SubstringFuncContext ctx) {
+    SubstringFunction function = new SubstringFunction(
+      createQueryContext(ctx),
+      expressions.get(ctx.value),
+      expressions.get(ctx.beginIndex),
+      expressions.get(ctx.endIndex));
+    expressions.put(ctx, function);
+  }
+
+  @Override
   public void enterMeanFunc(QueryParser.MeanFuncContext ctx) {
 
   }
@@ -555,6 +589,19 @@ public class QueryListenerImpl implements QueryListener {
   @Override
   public void exitMaxFunc(QueryParser.MaxFuncContext ctx) {
     MaxFunction function = new MaxFunction(
+      createQueryContext(ctx),
+      expressions.get(ctx.value));
+    expressions.put(ctx, function);
+  }
+
+  @Override
+  public void enterSumFunc(QueryParser.SumFuncContext ctx) {
+
+  }
+
+  @Override
+  public void exitSumFunc(QueryParser.SumFuncContext ctx) {
+    SumFunction function = new SumFunction(
       createQueryContext(ctx),
       expressions.get(ctx.value));
     expressions.put(ctx, function);
