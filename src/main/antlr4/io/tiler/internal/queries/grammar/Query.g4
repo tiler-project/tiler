@@ -4,30 +4,13 @@ query : fromClause whereClause? groupClause? aggregateClause? metricClause? poin
 fromClause : FROM exprs+=metricExpr (',' exprs+=metricExpr)* ;
 whereClause : WHERE expr ;
 groupClause : GROUP fields+=ID (',' fields+=ID)* ;
-aggregateClause : AGGREGATE exprs+=aggregateExpr AS names+=ID (',' exprs+=aggregateExpr AS names+=ID)* ;
+aggregateClause : AGGREGATE namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 pointClause : POINT namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 metricClause : METRIC namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 
-aggregateExpr : func=intervalFunc # IntervalFuncExpr
-              | func=allFunc      # AllFuncExpr
-              ;
-intervalFunc : INTERVAL '(' value=expr ',' offset=expr ',' size=expr ')' ;
-allFunc : ALL '()' ;
 expr : ID                                                                                     # Field
-     | constant=INT                                                                           # Constant
-     | constant=STRING                                                                        # Constant
-     | constant=TIME_PERIOD                                                                   # Constant
-     | constant=REGEX                                                                         # Constant
-     | func=nowFunc                                                                           # NowFuncExpr
-     | func=replaceFunc                                                                       # ReplaceFuncExpr
-     | func=substringFunc                                                                     # SubstringFuncExpr
-     | func=meanFunc                                                                          # MeanFuncExpr
-     | func=minFunc                                                                           # MinFuncExpr
-     | func=maxFunc                                                                           # MaxFuncExpr
-     | func=sumFunc                                                                           # SumFuncExpr
-     | func=firstFunc                                                                         # FirstFuncExpr
-     | func=lastFunc                                                                          # LastFuncExpr
-     | func=concatFunc                                                                        # ConcatFuncExpr
+     | constant=(INT | STRING | TIME_PERIOD | REGEX)                                          # Constant
+     | func=ID '(' (exprs+=expr (',' exprs+=expr)*)? ')'                                      # Func
      | expr op=(ASTERISK | FORWARD_SLASH) expr                                                # BinaryOp
      | expr op=(PLUS | MINUS) expr                                                            # BinaryOp
      | expr op=(LESS_THAN | GREATER_THAN | LESS_THAN_OR_EQUALS | GREATER_THAN_OR_EQUALS) expr # BinaryOp
@@ -36,16 +19,6 @@ expr : ID                                                                       
      | expr op=(AND | OR) expr                                                                # BinaryOp
      | '(' expr ')'                                                                           # Parentheses
      ;
-nowFunc : NOW '()' ;
-replaceFunc : REPLACE '(' value=expr ',' regex=expr ',' replacement=expr ')' ;
-substringFunc : SUBSTRING '(' value=expr ',' beginIndex=expr ',' endIndex=expr ')' ;
-meanFunc : MEAN '(' value=expr ')' ;
-minFunc : MIN '(' value=expr ')' ;
-maxFunc : MAX '(' value=expr ')' ;
-sumFunc : SUM '(' value=expr ')' ;
-firstFunc : FIRST '(' value=expr ')' ;
-lastFunc : LAST '(' value=expr ')' ;
-concatFunc : CONCAT '(' params+=expr (',' params+=expr)* ')' ;
 metricExpr : ID
            | REGEX ;
 namedExpr : ID
@@ -57,18 +30,6 @@ GROUP : 'group' ;
 AGGREGATE : 'aggregate' ;
 POINT : 'point' ;
 METRIC : 'metric' ;
-INTERVAL : 'interval' ;
-ALL : 'all' ;
-NOW : 'now' ;
-REPLACE : 'replace' ;
-SUBSTRING : 'substring' ;
-MEAN : 'mean' ;
-MIN : 'min' ;
-MAX : 'max' ;
-SUM : 'sum' ;
-FIRST : 'first' ;
-LAST : 'last' ;
-CONCAT : 'concat' ;
 AND : 'and' ;
 OR : 'or' ;
 AS : 'as' ;

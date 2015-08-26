@@ -8,6 +8,6 @@ class AggregateClauseSpec extends Specification {
     def aggregateClause = new AggregateClause(new HashMap<>())
 
     then:
-    aggregateClause.namedAggregateExpressions().getClass().canonicalName == "java.util.Collections.UnmodifiableMap"
+    aggregateClause.namedExpressions().getClass().canonicalName == "java.util.Collections.UnmodifiableMap"
   }
 }

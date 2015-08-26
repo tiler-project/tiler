@@ -298,279 +298,146 @@ class QueryFactorySpec extends Specification {
     groupClauseFieldExpressions[1].fieldName() == "fieldName2"
   }
 
-  def "aggregate clause with an interval aggregation"() {
+  def "implicitly named field"() {
     def queryText = """
       from metric.name
-      aggregate interval(fieldName, 0, 1000) as newFieldName
+      $clauseName fieldName
     """
 
     when:
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedAggregateExpressions = query.aggregateClause().namedAggregateExpressions()
-    namedAggregateExpressions.size() == 1
-    def aggregateExpression = namedAggregateExpressions["newFieldName"]
-    aggregateExpression instanceof IntervalFunction
-    aggregateExpression.value() instanceof FieldExpression
-    aggregateExpression.value().fieldName == "fieldName"
-    aggregateExpression.offset() instanceof ConstantExpression
-    aggregateExpression.offset().value() == 0
-    aggregateExpression.size() instanceof ConstantExpression
-    aggregateExpression.size().value() == 1000
-  }
-
-  def "aggregate clause with an all aggregation"() {
-    def queryText = """
-      from metric.name
-      aggregate all() as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedAggregateExpressions = query.aggregateClause().namedAggregateExpressions()
-    namedAggregateExpressions.size() == 1
-    def aggregateExpression = namedAggregateExpressions["newFieldName"]
-    aggregateExpression instanceof AllFunction
-  }
-
-  def "aggregate clause with multiple aggregations"() {
-    def queryText = """
-      from metric.name
-      aggregate interval(fieldName, 0, 1000) as newFieldName,
-        interval(fieldName2, 1, 1001) as newFieldName2
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedAggregateExpressions = query.aggregateClause().namedAggregateExpressions()
-    namedAggregateExpressions.size() == 2
-    def aggregateExpression = namedAggregateExpressions["newFieldName"]
-    aggregateExpression instanceof IntervalFunction
-    aggregateExpression.value() instanceof FieldExpression
-    aggregateExpression.value().fieldName == "fieldName"
-    aggregateExpression.offset() instanceof ConstantExpression
-    aggregateExpression.offset().value() == 0
-    aggregateExpression.size() instanceof ConstantExpression
-    aggregateExpression.size().value() == 1000
-    def aggregateExpression2 = namedAggregateExpressions["newFieldName2"]
-    aggregateExpression2 instanceof IntervalFunction
-    aggregateExpression2.value() instanceof FieldExpression
-    aggregateExpression2.value().fieldName == "fieldName2"
-    aggregateExpression2.offset() instanceof ConstantExpression
-    aggregateExpression2.offset().value() == 1
-    aggregateExpression2.size() instanceof ConstantExpression
-    aggregateExpression2.size().value() == 1001
-  }
-
-  def "metric clause with an explicitly named field"() {
-    def queryText = """
-      from metric.name
-      metric fieldName as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedExpressions = query.metricClause().namedExpressions()
+    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
     namedExpressions.size() == 1
-    def expression = namedExpressions["newFieldName"]
-    expression instanceof FieldExpression
-    expression.fieldName() == "fieldName"
-  }
-
-  def "metric clause with an complex expression"() {
-    def queryText = """
-      from metric.name
-      metric concat(fieldName, ", ", fieldName2) as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedExpressions = query.metricClause().namedExpressions()
-    namedExpressions.size() == 1
-    def expression = namedExpressions["newFieldName"]
-    expression instanceof ConcatFunction
-    def parameters = expression.parameters();
-    parameters.size() == 3
-    parameters[0] instanceof FieldExpression
-    parameters[0].fieldName() == "fieldName"
-    parameters[1] instanceof ConstantExpression
-    parameters[1].value() == ", "
-    parameters[2] instanceof FieldExpression
-    parameters[2 ].fieldName() == "fieldName2"
-  }
-
-  def "metric clause with an implicitly named field"() {
-    def queryText = """
-      from metric.name
-      metric fieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedExpressions = query.metricClause().namedExpressions()
-    namedExpressions.size() == 1
-    def expression = namedExpressions["fieldName"]
-    expression instanceof FieldExpression
-    expression.fieldName() == "fieldName"
-  }
-
-  def "point clause with an implicitly named field"() {
-    def queryText = """
-      from metric.name
-      point fieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedExpressions = query.pointClause().namedExpressions()
-    namedExpressions.size() == 1
-    def expression = namedExpressions["fieldName"]
-    expression instanceof FieldExpression
-    expression.fieldName() == "fieldName"
-  }
-
-  def "point clause with an explicitly named field"() {
-    def queryText = """
-      from metric.name
-      point fieldName as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedExpressions = query.pointClause().namedExpressions()
-    namedExpressions.size() == 1
-    def expression = namedExpressions["newFieldName"]
-    expression instanceof FieldExpression
-    expression.fieldName() == "fieldName"
-  }
-
-  def "point clause with an complex expression"() {
-    def queryText = """
-      from metric.name
-      point concat(fieldName, ", ", fieldName2) as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def namedExpressions = query.pointClause().namedExpressions()
-    namedExpressions.size() == 1
-    def expression = namedExpressions["newFieldName"]
-    expression instanceof ConcatFunction
-    def parameters = expression.parameters();
-    parameters.size() == 3
-    parameters[0] instanceof FieldExpression
-    parameters[0].fieldName() == "fieldName"
-    parameters[1] instanceof ConstantExpression
-    parameters[1].value() == ", "
-    parameters[2] instanceof FieldExpression
-    parameters[2 ].fieldName() == "fieldName2"
-  }
-
-  def "now function"() {
-    def queryText = """
-      from metric.name
-      point now() as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def expression = query.pointClause().namedExpressions()["newFieldName"]
-    expression instanceof NowFunction
-  }
-
-  def "replace function"() {
-    def queryText = """
-      from metric.name
-      point replace("one two", /one/i, "two") as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def expression = query.pointClause().namedExpressions()["newFieldName"]
-    expression instanceof ReplaceFunction
-    expression.value() instanceof ConstantExpression
-    expression.value().value() == "one two"
-    expression.regex() instanceof ConstantExpression
-    expression.regex().value().pattern() == "one"
-    expression.regex().value().flags() == Pattern.CASE_INSENSITIVE
-    expression.replacement() instanceof ConstantExpression
-    expression.replacement().value() == "two"
-  }
-
-  def "simple number list function"() {
-    def queryText = """
-      from metric.name
-      point $functionName(fieldName) as newFieldName
-    """
-
-    when:
-    def query = factory.parseQuery(queryText)
-
-    then:
-    def expression = query.pointClause().namedExpressions()["newFieldName"]
-    expression.class == functionClass
-    expression.list() instanceof FieldExpression
-    expression.list().fieldName() == "fieldName"
+    namedExpressions["fieldName"] instanceof FieldExpression
+    namedExpressions["fieldName"].fieldName() == "fieldName"
 
     where:
-    functionName | functionClass
-    "mean"       | MeanFunction
-    "min"        | MinFunction
-    "max"        | MaxFunction
-    "sum"        | SumFunction
-    "first"      | FirstFunction
-    "last"       | LastFunction
+    clauseName << ["metric", "metric", "point"]
+  }
+
+  def "explicitly named field"() {
+    def queryText = """
+      from metric.name
+      $clauseName fieldName as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    namedExpressions.size() == 1
+    def expression = namedExpressions["newFieldName"]
+    expression instanceof FieldExpression
+    expression.fieldName() == "fieldName"
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
+  }
+
+  def "multiple expressions"() {
+    def queryText = """
+      from metric.name
+      $clauseName all() as newFieldName, concat(fieldName, ", ", fieldName2) as newFieldName2
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    namedExpressions.size() == 2
+    namedExpressions["newFieldName"] instanceof AllFunction
+    namedExpressions["newFieldName2"] instanceof ConcatFunction
+    namedExpressions["newFieldName2"].parameters().size() == 3
+    namedExpressions["newFieldName2"].parameters()[0] instanceof FieldExpression
+    namedExpressions["newFieldName2"].parameters()[0].fieldName() == "fieldName"
+    namedExpressions["newFieldName2"].parameters()[1] instanceof ConstantExpression
+    namedExpressions["newFieldName2"].parameters()[1].value() == ", "
+    namedExpressions["newFieldName2"].parameters()[2] instanceof FieldExpression
+    namedExpressions["newFieldName2"].parameters()[2].fieldName() == "fieldName2"
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
+  }
+
+  def "interval function"() {
+    def queryText = """
+      from metric.name
+      $clauseName interval(fieldName, 0, 1000) as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    namedExpressions.size() == 1
+    def aggregateExpression = namedExpressions["newFieldName"]
+    aggregateExpression instanceof IntervalFunction
+    aggregateExpression.value() instanceof FieldExpression
+    aggregateExpression.value().fieldName == "fieldName"
+    aggregateExpression.offset() instanceof ConstantExpression
+    aggregateExpression.offset().value() == 0
+    aggregateExpression.size() instanceof ConstantExpression
+    aggregateExpression.size().value() == 1000
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
+  }
+
+  def "all function"() {
+    def queryText = """
+      from metric.name
+      $clauseName all() as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    namedExpressions.size() == 1
+    def aggregateExpression = namedExpressions["newFieldName"]
+    aggregateExpression instanceof AllFunction
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
   }
 
   def "concat function with one parameter"() {
     def queryText = """
       from metric.name
-      point concat(fieldName) as newFieldName
+      $clauseName concat(fieldName) as newFieldName
     """
 
     when:
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query.pointClause().namedExpressions()["newFieldName"]
+    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
     expression instanceof ConcatFunction
     expression.parameters().size() == 1
     expression.parameters()[0] instanceof FieldExpression
     expression.parameters()[0].fieldName() == "fieldName"
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
   }
 
   def "concat function with multiple parameters"() {
     def queryText = """
       from metric.name
-      point concat(fieldName, ", ", fieldName2) as newFieldName
+      $clauseName concat(fieldName, ", ", fieldName2) as newFieldName
     """
 
     when:
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query.pointClause().namedExpressions()["newFieldName"]
+    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
     expression instanceof ConcatFunction
     expression.parameters().size() == 3
     expression.parameters()[0] instanceof FieldExpression
@@ -579,19 +446,100 @@ class QueryFactorySpec extends Specification {
     expression.parameters()[1].value() == ", "
     expression.parameters()[2] instanceof FieldExpression
     expression.parameters()[2].fieldName() == "fieldName2"
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
   }
 
-  def "substring function"() {
+  def "now function"() {
     def queryText = """
       from metric.name
-      point substring(fieldName, 1, 2) as newFieldName
+      $clauseName now() as newFieldName
     """
 
     when:
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query.pointClause().namedExpressions()["newFieldName"]
+    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    expression instanceof NowFunction
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
+  }
+
+  def "replace function"() {
+    def queryText = """
+      from metric.name
+      $clauseName replace("one two", /one/i, "two") as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    expression instanceof ReplaceFunction
+    expression.value() instanceof ConstantExpression
+    expression.value().value() == "one two"
+    expression.regex() instanceof ConstantExpression
+    expression.regex().value().pattern() == "one"
+    expression.regex().value().flags() == Pattern.CASE_INSENSITIVE
+    expression.replacement() instanceof ConstantExpression
+    expression.replacement().value() == "two"
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
+  }
+
+  def "simple number list function"() {
+    def queryText = """
+      from metric.name
+      $clauseName $functionName(fieldName) as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    expression.class == functionClass
+    expression.list() instanceof FieldExpression
+    expression.list().fieldName() == "fieldName"
+
+    where:
+    clauseName   | functionName | functionClass
+    "aggregate"  | "mean"       | MeanFunction
+    "aggregate"  | "min"        | MinFunction
+    "aggregate"  | "max"        | MaxFunction
+    "aggregate"  | "sum"        | SumFunction
+    "aggregate"  | "first"      | FirstFunction
+    "aggregate"  | "last"       | LastFunction
+    "metric"     | "mean"       | MeanFunction
+    "metric"     | "min"        | MinFunction
+    "metric"     | "max"        | MaxFunction
+    "metric"     | "sum"        | SumFunction
+    "metric"     | "first"      | FirstFunction
+    "metric"     | "last"       | LastFunction
+    "point"      | "mean"       | MeanFunction
+    "point"      | "min"        | MinFunction
+    "point"      | "max"        | MaxFunction
+    "point"      | "sum"        | SumFunction
+    "point"      | "first"      | FirstFunction
+    "point"      | "last"       | LastFunction
+  }
+
+  def "substring function"() {
+    def queryText = """
+      from metric.name
+      $clauseName substring(fieldName, 1, 2) as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
     expression instanceof SubstringFunction
     expression.value() instanceof FieldExpression
     expression.value().fieldName() == "fieldName"
@@ -599,6 +547,9 @@ class QueryFactorySpec extends Specification {
     expression.beginIndex().value() == 1
     expression.endIndex() instanceof ConstantExpression
     expression.endIndex().value() == 2
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
   }
 
   def "all clauses"() {
@@ -625,14 +576,14 @@ class QueryFactorySpec extends Specification {
     query.whereClause().expression().operand2().value() == 1
     query.groupClause().fieldExpressions().size() == 1
     query.groupClause().fieldExpressions()[0].fieldName() == "fieldName"
-    query.aggregateClause().namedAggregateExpressions().size() == 1
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"] instanceof IntervalFunction
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"].value() instanceof FieldExpression
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"].value().fieldName == "fieldName"
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"].offset() instanceof ConstantExpression
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"].offset().value() == 0
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"].size() instanceof ConstantExpression
-    query.aggregateClause().namedAggregateExpressions()["newFieldName"].size().value() == 1000
+    query.aggregateClause().namedExpressions().size() == 1
+    query.aggregateClause().namedExpressions()["newFieldName"] instanceof IntervalFunction
+    query.aggregateClause().namedExpressions()["newFieldName"].value() instanceof FieldExpression
+    query.aggregateClause().namedExpressions()["newFieldName"].value().fieldName == "fieldName"
+    query.aggregateClause().namedExpressions()["newFieldName"].offset() instanceof ConstantExpression
+    query.aggregateClause().namedExpressions()["newFieldName"].offset().value() == 0
+    query.aggregateClause().namedExpressions()["newFieldName"].size() instanceof ConstantExpression
+    query.aggregateClause().namedExpressions()["newFieldName"].size().value() == 1000
     query.metricClause().namedExpressions().size() == 1
     query.metricClause().namedExpressions()["fieldName"] instanceof FieldExpression
     query.metricClause().namedExpressions()["fieldName"].fieldName() == "fieldName"

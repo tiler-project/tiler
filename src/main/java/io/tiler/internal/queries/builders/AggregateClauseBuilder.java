@@ -1,18 +1,19 @@
 package io.tiler.internal.queries.builders;
 
 import io.tiler.internal.queries.AggregateClause;
+import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.aggregations.AggregateExpression;
 
 import java.util.HashMap;
 
 public class AggregateClauseBuilder {
-  HashMap<String, AggregateExpression> namedAggregateExpressions = new HashMap<>();
+  HashMap<String, Expression> namedExpressions = new HashMap<>();
 
-  public void namedAggregateExpression(String name, AggregateExpression aggregateExpression) {
-    namedAggregateExpressions.put(name, aggregateExpression);
+  public void namedExpression(String name, Expression Expression) {
+    namedExpressions.put(name, Expression);
   }
 
   public AggregateClause build() {
-    return new AggregateClause(namedAggregateExpressions);
+    return new AggregateClause(namedExpressions);
   }
 }

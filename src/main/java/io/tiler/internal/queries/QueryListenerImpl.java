@@ -206,9 +206,9 @@ public class QueryListenerImpl implements QueryListener {
   public void exitAggregateClause(QueryParser.AggregateClauseContext ctx) {
     AggregateClauseBuilder builder = new AggregateClauseBuilder();
 
-    for (int i = 0, count = ctx.exprs.size(); i < count; i++) {
-      AggregateExpression expression = (AggregateExpression) expressions.get(ctx.exprs.get(i));
-      builder.namedAggregateExpression(ctx.names.get(i).getText(), expression);
+    for (QueryParser.NamedExprContext namedExpr : ctx.namedExprs) {
+      NamedExpression namedExpression = namedExpressions.get(namedExpr);
+      builder.namedExpression(namedExpression.name(), namedExpression.expression());
     }
 
     queryBuilder.aggregateClause(builder.build());
@@ -249,53 +249,6 @@ public class QueryListenerImpl implements QueryListener {
   }
 
   @Override
-  public void enterIntervalFuncExpr(QueryParser.IntervalFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitIntervalFuncExpr(QueryParser.IntervalFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.intervalFunc()));
-  }
-
-  @Override
-  public void enterAllFuncExpr(QueryParser.AllFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitAllFuncExpr(QueryParser.AllFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.allFunc()));
-  }
-
-  @Override
-  public void enterIntervalFunc(QueryParser.IntervalFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitIntervalFunc(QueryParser.IntervalFuncContext ctx) {
-    IntervalFunction function = new IntervalFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value),
-      expressions.get(ctx.offset),
-      expressions.get(ctx.size));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterAllFunc(QueryParser.AllFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitAllFunc(QueryParser.AllFuncContext ctx) {
-    AllFunction function = new AllFunction(
-      createQueryContext(ctx));
-    expressions.put(ctx, function);
-  }
-
-  @Override
   public void enterField(QueryParser.FieldContext ctx) {
 
   }
@@ -307,33 +260,157 @@ public class QueryListenerImpl implements QueryListener {
   }
 
   @Override
-  public void enterConcatFuncExpr(QueryParser.ConcatFuncExprContext ctx) {
+  public void enterFunc(QueryParser.FuncContext ctx) {
 
   }
 
-  @Override
-  public void exitConcatFuncExpr(QueryParser.ConcatFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.concatFunc()));
+  private boolean validParameterCount(QueryParser.FuncContext ctx, int count) {
+    if (ctx.expr().size() != count) {
+      errors.add(new QueryError(ctx.getStart(), "Function needs " + count + " parameter" + (count != 1 ? "s" : "") + " but actually has " + ctx.expr().size()));
+      return false;
+    }
+
+    return true;
+  }
+
+  private boolean validMinParameterCount(QueryParser.FuncContext ctx, int minCount) {
+    if (ctx.expr().size() < minCount) {
+      errors.add(new QueryError(ctx.getStart(), "Function needs at least " + minCount + " parameter" + (minCount != 1 ? "s" : "") + " but actually has " + ctx.expr().size()));
+      return false;
+    }
+
+    return true;
   }
 
   @Override
-  public void enterFirstFuncExpr(QueryParser.FirstFuncExprContext ctx) {
+  public void exitFunc(QueryParser.FuncContext ctx) {
+    Function function;
 
-  }
+    switch (ctx.func.getText()) {
+      case "interval":
+        if (!validParameterCount(ctx, 3)) {
+          return;
+        }
 
-  @Override
-  public void exitFirstFuncExpr(QueryParser.FirstFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.firstFunc()));
-  }
+        function = new IntervalFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)),
+          expressions.get(ctx.expr().get(1)),
+          expressions.get(ctx.expr().get(2)));
+        break;
+      case "all":
+        if (!validParameterCount(ctx, 0)) {
+          return;
+        }
 
-  @Override
-  public void enterNowFuncExpr(QueryParser.NowFuncExprContext ctx) {
+        function = new AllFunction(
+          createQueryContext(ctx));
+        break;
+      case "now":
+        if (!validParameterCount(ctx, 0)) {
+          return;
+        }
 
-  }
+        function = new NowFunction(
+          createQueryContext(ctx));
+        break;
+      case "replace":
+        if (!validParameterCount(ctx, 3)) {
+          return;
+        }
 
-  @Override
-  public void exitNowFuncExpr(QueryParser.NowFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.nowFunc()));
+        function = new ReplaceFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)),
+          expressions.get(ctx.expr().get(1)),
+          expressions.get(ctx.expr().get(2)));
+        break;
+      case "substring":
+        if (!validParameterCount(ctx, 3)) {
+          return;
+        }
+
+        function = new SubstringFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)),
+          expressions.get(ctx.expr().get(1)),
+          expressions.get(ctx.expr().get(2)));
+        break;
+      case "concat":
+        if (!validMinParameterCount(ctx, 1)) {
+          return;
+        }
+
+        ArrayList<Expression> parameters = new ArrayList<>();
+
+        for (QueryParser.ExprContext parameter : ctx.expr()) {
+          parameters.add(expressions.get(parameter));
+        }
+
+        function = new ConcatFunction(
+          createQueryContext(ctx),
+          parameters);
+        break;
+      case "mean":
+        if (!validParameterCount(ctx, 1)) {
+          return;
+        }
+
+        function = new MeanFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)));
+        break;
+      case "min":
+        if (!validParameterCount(ctx, 1)) {
+          return;
+        }
+
+        function = new MinFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)));
+        break;
+      case "max":
+        if (!validParameterCount(ctx, 1)) {
+          return;
+        }
+
+        function = new MaxFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)));
+        break;
+      case "sum":
+        if (!validParameterCount(ctx, 1)) {
+          return;
+        }
+
+        function = new SumFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)));
+        break;
+      case "first":
+        if (!validParameterCount(ctx, 1)) {
+          return;
+        }
+
+        function = new FirstFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)));
+        break;
+      case "last":
+        if (!validParameterCount(ctx, 1)) {
+          return;
+        }
+
+        function = new LastFunction(
+          createQueryContext(ctx),
+          expressions.get(ctx.expr().get(0)));
+        break;
+      default:
+        errors.add(new QueryError(ctx.func, "Unknown function '" + ctx.func.getText() + "'"));
+        return;
+    }
+
+    expressions.put(ctx, function);
   }
 
   @Override
@@ -368,26 +445,6 @@ public class QueryListenerImpl implements QueryListener {
     expressions.put(ctx, expression);
   }
 
-  @Override
-  public void enterLastFuncExpr(QueryParser.LastFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitLastFuncExpr(QueryParser.LastFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.lastFunc()));
-  }
-
-  @Override
-  public void enterSubstringFuncExpr(QueryParser.SubstringFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitSubstringFuncExpr(QueryParser.SubstringFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.substringFunc()));
-  }
-
   private Expression createRegexConstantExpression(Token regexToken) {
     Expression expression;
     try {
@@ -396,55 +453,6 @@ public class QueryListenerImpl implements QueryListener {
       errors.add(new QueryError(regexToken, "Invalid options in regex literal. " + e.getMessage()));
       expression = null;
     } return expression;
-  }
-
-  @Override
-  public void enterMeanFuncExpr(QueryParser.MeanFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitMeanFuncExpr(QueryParser.MeanFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.meanFunc()));
-  }
-
-  @Override
-  public void enterSumFuncExpr(QueryParser.SumFuncExprContext ctx) {
-  }
-
-  @Override
-  public void exitSumFuncExpr(QueryParser.SumFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.sumFunc()));
-  }
-
-  @Override
-  public void enterMaxFuncExpr(QueryParser.MaxFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitMaxFuncExpr(QueryParser.MaxFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.maxFunc()));
-  }
-
-  @Override
-  public void enterReplaceFuncExpr(QueryParser.ReplaceFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitReplaceFuncExpr(QueryParser.ReplaceFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.replaceFunc()));
-  }
-
-  @Override
-  public void enterMinFuncExpr(QueryParser.MinFuncExprContext ctx) {
-
-  }
-
-  @Override
-  public void exitMinFuncExpr(QueryParser.MinFuncExprContext ctx) {
-    expressions.put(ctx, expressions.get(ctx.minFunc()));
   }
 
   @Override
@@ -513,141 +521,6 @@ public class QueryListenerImpl implements QueryListener {
     }
 
     expressions.put(ctx, expression);
-  }
-
-  @Override
-  public void enterNowFunc(QueryParser.NowFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitNowFunc(QueryParser.NowFuncContext ctx) {
-    expressions.put(ctx, new NowFunction(createQueryContext(ctx)));
-  }
-
-  @Override
-  public void enterReplaceFunc(QueryParser.ReplaceFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitReplaceFunc(QueryParser.ReplaceFuncContext ctx) {
-    ReplaceFunction function = new ReplaceFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value),
-      expressions.get(ctx.regex),
-      expressions.get(ctx.replacement));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterSubstringFunc(QueryParser.SubstringFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitSubstringFunc(QueryParser.SubstringFuncContext ctx) {
-    SubstringFunction function = new SubstringFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value),
-      expressions.get(ctx.beginIndex),
-      expressions.get(ctx.endIndex));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterMeanFunc(QueryParser.MeanFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitMeanFunc(QueryParser.MeanFuncContext ctx) {
-    MeanFunction function = new MeanFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterMinFunc(QueryParser.MinFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitMinFunc(QueryParser.MinFuncContext ctx) {
-    MinFunction function = new MinFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterMaxFunc(QueryParser.MaxFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitMaxFunc(QueryParser.MaxFuncContext ctx) {
-    MaxFunction function = new MaxFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterSumFunc(QueryParser.SumFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitSumFunc(QueryParser.SumFuncContext ctx) {
-    SumFunction function = new SumFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterFirstFunc(QueryParser.FirstFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitFirstFunc(QueryParser.FirstFuncContext ctx) {
-    FirstFunction function = new FirstFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterLastFunc(QueryParser.LastFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitLastFunc(QueryParser.LastFuncContext ctx) {
-    LastFunction function = new LastFunction(
-      createQueryContext(ctx),
-      expressions.get(ctx.value));
-    expressions.put(ctx, function);
-  }
-
-  @Override
-  public void enterConcatFunc(QueryParser.ConcatFuncContext ctx) {
-
-  }
-
-  @Override
-  public void exitConcatFunc(QueryParser.ConcatFuncContext ctx) {
-    ArrayList<Expression> parameters = new ArrayList<>();
-
-    for (QueryParser.ExprContext param : ctx.params) {
-      parameters.add(expressions.get(param));
-    }
-
-    ConcatFunction function = new ConcatFunction(createQueryContext(ctx), parameters);
-    expressions.put(ctx, function);
   }
 
   @Override

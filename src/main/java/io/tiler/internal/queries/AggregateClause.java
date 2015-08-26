@@ -2,6 +2,7 @@ package io.tiler.internal.queries;
 
 import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.core.json.JsonArrayUtils;
+import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.aggregations.AggregateExpression;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -10,14 +11,14 @@ import java.time.Clock;
 import java.util.*;
 
 public class AggregateClause {
-  private final Map<String, AggregateExpression> namedAggregateExpressions;
+  private final Map<String, Expression> namedExpressions;
 
-  public AggregateClause(Map<String, AggregateExpression> namedAggregateExpressions) {
-    this.namedAggregateExpressions = Collections.unmodifiableMap(namedAggregateExpressions);
+  public AggregateClause(Map<String, Expression> namedExpressions) {
+    this.namedExpressions = Collections.unmodifiableMap(namedExpressions);
   }
 
-  public Map<String, AggregateExpression> namedAggregateExpressions() {
-    return namedAggregateExpressions;
+  public Map<String, Expression> namedExpressions() {
+    return namedExpressions;
   }
 
   public void applyToMetrics(JsonArray metrics) throws EvaluationException {
@@ -35,9 +36,9 @@ public class AggregateClause {
       EvaluationContext context = new EvaluationContext(Clock.systemUTC(), point);
       ArrayList<Object> aggregateKey = new ArrayList<>();
 
-      for (Map.Entry<String, AggregateExpression> aggregateClauseEntry : namedAggregateExpressions.entrySet()) {
+      for (Map.Entry<String, Expression> aggregateClauseEntry : namedExpressions.entrySet()) {
         String fieldName = aggregateClauseEntry.getKey();
-        AggregateExpression expression = aggregateClauseEntry.getValue();
+        Expression expression = aggregateClauseEntry.getValue();
         Object aggregateValue = expression.evaluate(context);
 
         aggregateKey.add(fieldName);
