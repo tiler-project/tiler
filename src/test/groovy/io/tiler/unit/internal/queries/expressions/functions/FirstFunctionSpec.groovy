@@ -1,10 +1,8 @@
 package io.tiler.unit.internal.queries.expressions.functions
-
 import io.tiler.internal.queries.EvaluationException
 import io.tiler.internal.queries.QueryContext
 import io.tiler.internal.queries.expressions.constants.ConstantExpression
 import io.tiler.internal.queries.expressions.functions.FirstFunction
-import io.tiler.internal.queries.expressions.functions.MeanFunction
 import io.tiler.unit.internal.queries.expressions.builders.EvaluationContextBuilder
 import spock.lang.Specification
 
@@ -14,7 +12,7 @@ class FirstFunctionSpec extends Specification {
 
   def "it returns the first item in a list"() {
     given:
-    def list = [1, 2, 3]
+    def list = ["1", "2", "3"]
     def function = new FirstFunction(
       queryContext,
       new ConstantExpression(queryContext, list))
@@ -23,7 +21,7 @@ class FirstFunctionSpec extends Specification {
     def result = function.evaluate(context)
 
     then:
-    result == 1
+    result == "1"
   }
 
   def "it validates the list is actually a list"() {

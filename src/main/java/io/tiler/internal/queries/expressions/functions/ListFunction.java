@@ -35,7 +35,7 @@ public abstract class ListFunction<T> extends Function {
 
     for (Object item : list2) {
       if (item != null && !itemClass.isInstance(item)) {
-        throw new EvaluationException(queryContext(), "items in list must be numbers");
+        throw new EvaluationException(queryContext(), "Each item in list must be a '" + itemClass.getName() + "'");
       }
 
       typedList.add((T) item);

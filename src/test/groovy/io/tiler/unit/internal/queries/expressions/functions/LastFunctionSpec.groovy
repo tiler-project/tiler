@@ -13,7 +13,7 @@ class LastFunctionSpec extends Specification {
 
   def "it returns the last item in a list"() {
     given:
-    def list = [1, 2, 3]
+    def list = ["1", "2", "3"]
     def function = new LastFunction(
       queryContext,
       new ConstantExpression(queryContext, list))
@@ -22,7 +22,7 @@ class LastFunctionSpec extends Specification {
     def result = function.evaluate(context)
 
     then:
-    result == 3
+    result == "3"
   }
 
   def "it validates the list is actually a list"() {

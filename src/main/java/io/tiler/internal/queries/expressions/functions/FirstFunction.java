@@ -10,7 +10,7 @@ public class FirstFunction extends ListFunction<Object> {
   private final Expression list;
 
   public FirstFunction(QueryContext queryContext, Expression list) {
-    super(queryContext, list, Number.class);
+    super(queryContext, list, Object.class);
     this.list = list;
   }
 

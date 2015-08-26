@@ -84,7 +84,7 @@ class NumberListFunctionSpec extends Specification {
 
     then:
     def e = thrown(EvaluationException)
-    e.message == "Line 1:2\nquery\n  ^ items in list must be numbers"
+    e.message == "Line 1:2\nquery\n  ^ Each item in list must be a 'java.lang.Number'"
 
     where:
     functionClass << [MeanFunction, MinFunction, MaxFunction, SumFunction]
