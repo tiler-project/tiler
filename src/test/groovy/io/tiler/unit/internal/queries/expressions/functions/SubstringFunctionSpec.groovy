@@ -56,14 +56,14 @@ class SubstringFunctionSpec extends Specification {
 
     where:
     value      | beginIndex      | endIndex      | message
-    1          | validBeginIndex | validEndIndex | "value must be a String"
-    validValue | ""              | validEndIndex | "beginIndex must be an Integer"
-    validValue | validBeginIndex | ""            | "endIndex must be an Integer"
+    true       | validBeginIndex | validEndIndex | "value must be a 'java.lang.String' but was a 'java.lang.Boolean'"
+    validValue | true            | validEndIndex | "beginIndex must be a 'java.lang.Integer' but was a 'java.lang.Boolean'"
+    validValue | validBeginIndex | true          | "endIndex must be a 'java.lang.Integer' but was a 'java.lang.Boolean'"
     null       | validBeginIndex | validEndIndex | "value cannot be null"
     validValue | null            | validEndIndex | "beginIndex cannot be null"
     validValue | validBeginIndex | null          | "endIndex cannot be null"
-    "test"     | -1              | validEndIndex | "beginIndex cannot be less than zero"
-    "test"     | 0               | 5             | "endIndex cannot be greater than the length of value"
-    "test"     | 2               | 1             | "endIndex cannot be less than beginIndex"
+    "test"     | -1              | validEndIndex | "beginIndex cannot be less than zero but was -1"
+    "test"     | 0               | 5             | "endIndex cannot be greater than the length of value but endIndex was 5 and length was 4"
+    "test"     | 2               | 1             | "endIndex cannot be less than beginIndex but beginIndex was 2 and endIndex was 1"
   }
 }

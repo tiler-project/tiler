@@ -42,7 +42,7 @@ public class SubstringFunction extends Function {
     }
 
     if (!(value instanceof String)) {
-      throw new EvaluationException(queryContext(), "value must be a String");
+      throw new EvaluationException(queryContext(), "value must be a 'java.lang.String' but was a '" + value.getClass().getName() + "'");
     }
 
     if (beginIndex == null) {
@@ -50,7 +50,7 @@ public class SubstringFunction extends Function {
     }
 
     if (!(beginIndex instanceof Integer)) {
-      throw new EvaluationException(queryContext(), "beginIndex must be an Integer");
+      throw new EvaluationException(queryContext(), "beginIndex must be a 'java.lang.Integer' but was a '" + beginIndex.getClass().getName() + "'");
     }
 
     if (endIndex == null) {
@@ -58,7 +58,7 @@ public class SubstringFunction extends Function {
     }
 
     if (!(endIndex instanceof Integer)) {
-      throw new EvaluationException(queryContext(), "endIndex must be an Integer");
+      throw new EvaluationException(queryContext(), "endIndex must be a 'java.lang.Integer' but was a '" + endIndex.getClass().getName() + "'");
     }
 
     String valueString = (String) value;
@@ -66,15 +66,15 @@ public class SubstringFunction extends Function {
     Integer endIndexInteger = (Integer) endIndex;
 
     if (beginIndexInteger < 0) {
-      throw new EvaluationException(queryContext(), "beginIndex cannot be less than zero");
+      throw new EvaluationException(queryContext(), "beginIndex cannot be less than zero but was " + beginIndexInteger);
     }
 
     if (endIndexInteger > valueString.length()) {
-      throw new EvaluationException(queryContext(), "endIndex cannot be greater than the length of value");
+      throw new EvaluationException(queryContext(), "endIndex cannot be greater than the length of value but endIndex was " + endIndexInteger + " and length was " + valueString.length());
     }
 
     if (endIndexInteger < beginIndexInteger) {
-      throw new EvaluationException(queryContext(), "endIndex cannot be less than beginIndex");
+      throw new EvaluationException(queryContext(), "endIndex cannot be less than beginIndex but beginIndex was " + beginIndexInteger + " and endIndex was " + endIndexInteger);
     }
 
     return valueString.substring(beginIndexInteger, endIndexInteger);

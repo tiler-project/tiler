@@ -423,8 +423,16 @@ public class QueryListenerImpl implements QueryListener {
     Expression expression;
 
     switch (ctx.constant.getType()) {
-      case QueryLexer.INT:
-        expression = new ConstantExpression<>(createQueryContext(ctx), Long.parseLong(ctx.getText()));
+      case QueryLexer.INTEGER:
+        long value = Long.parseLong(ctx.getText());
+
+        if (value <= Integer.MAX_VALUE && value >= Integer.MIN_VALUE) {
+          expression = new ConstantExpression<>(createQueryContext(ctx), (int) value);
+        }
+        else {
+          expression = new ConstantExpression<>(createQueryContext(ctx), value);
+        }
+
         break;
       case QueryLexer.STRING:
         expression = new ConstantExpression<>(createQueryContext(ctx), stringLiteralToString(ctx.getText()));

@@ -101,10 +101,10 @@ class QueryFactorySpec extends Specification {
     metricExpressions[1].pattern().flags() == 0
   }
 
-  def "where clause with a comparison operation"() {
+  def "where clause with a integer or long constant"() {
     def queryText = """
       from metric.name
-      where fieldName == 1
+      where fieldName == $constantText
     """
 
     when:
@@ -116,7 +116,20 @@ class QueryFactorySpec extends Specification {
     expression.operand1() instanceof FieldExpression
     expression.operand1().fieldName() == "fieldName"
     expression.operand2() instanceof ConstantExpression
-    expression.operand2().value() == 1
+    expression.operand2().value().class == constantType
+    expression.operand2().value() == constantValue
+
+    where:
+    constantText                                | constantValue                  | constantType
+    "1"                                         | 1                              | Integer
+    "0"                                         | 0                              | Integer
+    "-1"                                        | -1                             | Integer
+    Integer.MAX_VALUE.toString()                | Integer.MAX_VALUE              | Integer
+    Integer.MIN_VALUE.toString()                | Integer.MIN_VALUE              | Integer
+    (Integer.MAX_VALUE.toLong() + 1).toString() | Integer.MAX_VALUE.toLong() + 1 | Long
+    (Integer.MIN_VALUE.toLong() - 1).toString() | Integer.MIN_VALUE.toLong() - 1 | Long
+    Long.MAX_VALUE.toString()                   | Long.MAX_VALUE                 | Long
+    Long.MIN_VALUE.toString()                   | Long.MIN_VALUE                 | Long
   }
 
   def "where clause with a regex match operation"() {
@@ -358,6 +371,38 @@ class QueryFactorySpec extends Specification {
     namedExpressions["newFieldName2"].parameters()[1].value() == ", "
     namedExpressions["newFieldName2"].parameters()[2] instanceof FieldExpression
     namedExpressions["newFieldName2"].parameters()[2].fieldName() == "fieldName2"
+
+    where:
+    clauseName << ["aggregate", "metric", "point"]
+  }
+
+  def "nested functions"() {
+    def queryText = """
+      from metric.name
+      $clauseName concat(last(fieldName), " - ", substring(last(fieldName2), 0, 10)) as newFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    namedExpressions.size() == 1
+    namedExpressions["newFieldName"] instanceof ConcatFunction
+    namedExpressions["newFieldName"].parameters().size() == 3
+    namedExpressions["newFieldName"].parameters()[0] instanceof LastFunction
+    namedExpressions["newFieldName"].parameters()[0].list() instanceof FieldExpression
+    namedExpressions["newFieldName"].parameters()[0].list().fieldName() == "fieldName"
+    namedExpressions["newFieldName"].parameters()[1] instanceof ConstantExpression
+    namedExpressions["newFieldName"].parameters()[1].value() == " - "
+    namedExpressions["newFieldName"].parameters()[2] instanceof SubstringFunction
+    namedExpressions["newFieldName"].parameters()[2].value() instanceof LastFunction
+    namedExpressions["newFieldName"].parameters()[2].value().list() instanceof FieldExpression
+    namedExpressions["newFieldName"].parameters()[2].value().list().fieldName() == "fieldName2"
+    namedExpressions["newFieldName"].parameters()[2].beginIndex() instanceof ConstantExpression
+    namedExpressions["newFieldName"].parameters()[2].beginIndex().value() == 0
+    namedExpressions["newFieldName"].parameters()[2].endIndex() instanceof ConstantExpression
+    namedExpressions["newFieldName"].parameters()[2].endIndex().value() == 10
 
     where:
     clauseName << ["aggregate", "metric", "point"]

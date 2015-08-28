@@ -9,7 +9,7 @@ pointClause : POINT namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 metricClause : METRIC namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 
 expr : ID                                                                                     # Field
-     | constant=(INT | STRING | TIME_PERIOD | REGEX)                                          # Constant
+     | constant=(INTEGER | STRING | TIME_PERIOD | REGEX)                                      # Constant
      | func=ID '(' (exprs+=expr (',' exprs+=expr)*)? ')'                                      # Func
      | expr op=(ASTERISK | FORWARD_SLASH) expr                                                # BinaryOp
      | expr op=(PLUS | MINUS) expr                                                            # BinaryOp
@@ -48,7 +48,7 @@ MATCHES : '~=' ;
 
 REGEX : '/' ('\\/'|~[/])* '/' [dixmsuU]* ;
 TIME_PERIOD : [1-9][0-9]*[usmhdw] ;
-INT : ('0'|[1-9][0-9]*) ;
+INTEGER : ('0'|[1-9][0-9]*|'-0'|'-'[1-9][0-9]*) ;
 ID : [a-zA-Z_] [a-zA-Z_\-0-9]* ('.' [a-zA-Z_] [a-zA-Z_\-0-9]*)* ;
 STRING : '\'' ('\\\''|~['])* '\''
        | '"' ('\\"'|~["])* '"';
