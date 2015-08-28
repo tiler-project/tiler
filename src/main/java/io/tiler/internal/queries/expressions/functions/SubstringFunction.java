@@ -5,8 +5,6 @@ import io.tiler.internal.queries.EvaluationException;
 import io.tiler.internal.queries.QueryContext;
 import io.tiler.internal.queries.expressions.Expression;
 
-import java.util.regex.Pattern;
-
 public class SubstringFunction extends Function {
   private final Expression value;
   private final Expression beginIndex;

@@ -155,7 +155,7 @@ class QueryFactorySpec extends Specification {
   def "where clause with an logical operation"() {
     def queryText = """
       from metric.name
-      where fieldName == 1 and fieldName2 == 2
+      where fieldName == 1 && fieldName2 == 2
     """
 
     when:
@@ -207,8 +207,8 @@ class QueryFactorySpec extends Specification {
     ">="     | GreaterThanOrEqualsOperation
     "=="     | EqualsOperation
     "!="     | NotEqualsOperation
-    "and"    | AndOperation
-    "or"     | OrOperation
+    "&&"     | AndOperation
+    "||"     | OrOperation
   }
 
   def "expression with a constant"() {
@@ -241,7 +241,7 @@ class QueryFactorySpec extends Specification {
   def "expression with parentheses"() {
     def queryText = """
       from metric.name
-      where fieldName and (fieldName2 and fieldName3)
+      where fieldName && (fieldName2 && fieldName3)
     """
 
     when:
@@ -602,7 +602,7 @@ class QueryFactorySpec extends Specification {
       from metric.name
       where fieldName == 1
       group fieldName
-      aggregate interval(fieldName, 0, 1000) as newFieldName
+      aggregate all() as all
       metric fieldName
       point fieldName
     """
@@ -622,13 +622,7 @@ class QueryFactorySpec extends Specification {
     query.groupClause().fieldExpressions().size() == 1
     query.groupClause().fieldExpressions()[0].fieldName() == "fieldName"
     query.aggregateClause().namedExpressions().size() == 1
-    query.aggregateClause().namedExpressions()["newFieldName"] instanceof IntervalFunction
-    query.aggregateClause().namedExpressions()["newFieldName"].value() instanceof FieldExpression
-    query.aggregateClause().namedExpressions()["newFieldName"].value().fieldName == "fieldName"
-    query.aggregateClause().namedExpressions()["newFieldName"].offset() instanceof ConstantExpression
-    query.aggregateClause().namedExpressions()["newFieldName"].offset().value() == 0
-    query.aggregateClause().namedExpressions()["newFieldName"].size() instanceof ConstantExpression
-    query.aggregateClause().namedExpressions()["newFieldName"].size().value() == 1000
+    query.aggregateClause().namedExpressions()["all"] instanceof AllFunction
     query.metricClause().namedExpressions().size() == 1
     query.metricClause().namedExpressions()["fieldName"] instanceof FieldExpression
     query.metricClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
@@ -681,11 +675,11 @@ class QueryFactorySpec extends Specification {
     "where 1 ~= /2/ == 3"  | RegexMatchOperation
     // Only one operator in Level 5
     // Levels 5 and 6
-    "where 1 ~= /2/ and 3" | AndOperation
-    "where 1 and 2 ~= /3/" | AndOperation
+    "where 1 ~= /2/ && 3"  | AndOperation
+    "where 1 && 2 ~= /3/"  | AndOperation
     // Level 6
-    "where 1 and 2 or 3"   | OrOperation
-    "where 1 or 2 and 3"   | AndOperation
+    "where 1 && 2 || 3"    | OrOperation
+    "where 1 || 2 && 3"    | AndOperation
   }
 
   def "invalid query"() {

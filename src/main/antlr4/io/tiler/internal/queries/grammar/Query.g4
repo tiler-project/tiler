@@ -30,8 +30,6 @@ GROUP : 'group' ;
 AGGREGATE : 'aggregate' ;
 POINT : 'point' ;
 METRIC : 'metric' ;
-AND : 'and' ;
-OR : 'or' ;
 AS : 'as' ;
 
 FORWARD_SLASH : '/' ;
@@ -45,6 +43,8 @@ GREATER_THAN_OR_EQUALS : '>=' ;
 EQUALS : '==' ;
 NOT_EQUALS : '!=' ;
 MATCHES : '~=' ;
+AND : '&&' ;
+OR : '||' ;
 
 REGEX : '/' ('\\/'|~[/])* '/' [dixmsuU]* ;
 TIME_PERIOD : [1-9][0-9]*[usmhdw] ;
