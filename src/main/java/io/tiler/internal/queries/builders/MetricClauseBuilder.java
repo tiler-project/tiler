@@ -1,6 +1,6 @@
 package io.tiler.internal.queries.builders;
 
-import io.tiler.internal.queries.MetricClause;
+import io.tiler.internal.queries.clauses.metrics.SelectClause;
 import io.tiler.internal.queries.expressions.Expression;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public class MetricClauseBuilder {
     namedExpressions.put(name, Expression);
   }
 
-  public MetricClause build() {
-    return new MetricClause(namedExpressions);
+  public SelectClause build() {
+    return new SelectClause(namedExpressions);
   }
 }

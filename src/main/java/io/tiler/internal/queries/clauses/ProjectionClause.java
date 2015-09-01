@@ -1,5 +1,7 @@
-package io.tiler.internal.queries;
+package io.tiler.internal.queries.clauses;
 
+import io.tiler.internal.queries.EvaluationContext;
+import io.tiler.internal.queries.EvaluationException;
 import io.tiler.internal.queries.expressions.Expression;
 import org.vertx.java.core.json.JsonObject;
 

@@ -1,6 +1,6 @@
-package io.tiler.unit.internal.queries
+package io.tiler.unit.internal.queries.clauses
 
-import io.tiler.internal.queries.GroupClause
+import io.tiler.internal.queries.clauses.GroupClause
 import spock.lang.*
 
 class GroupClauseSpec extends Specification {

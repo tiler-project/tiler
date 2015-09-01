@@ -1,8 +1,7 @@
 package io.tiler.internal.queries.builders;
 
-import io.tiler.internal.queries.AggregateClause;
+import io.tiler.internal.queries.clauses.AggregateClause;
 import io.tiler.internal.queries.expressions.Expression;
-import io.tiler.internal.queries.expressions.aggregations.AggregateExpression;
 
 import java.util.HashMap;
 

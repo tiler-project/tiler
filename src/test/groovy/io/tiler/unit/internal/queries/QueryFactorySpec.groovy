@@ -20,8 +20,8 @@ import io.tiler.internal.queries.expressions.functions.MeanFunction
 import io.tiler.internal.queries.expressions.functions.MinFunction
 import io.tiler.internal.queries.expressions.functions.NowFunction
 import io.tiler.internal.queries.expressions.functions.ReplaceFunction
-import io.tiler.internal.queries.RegexMetricExpression
-import io.tiler.internal.queries.SimpleMetricExpression
+import io.tiler.internal.queries.clauses.RegexMetricExpression
+import io.tiler.internal.queries.clauses.SimpleMetricExpression
 import io.tiler.internal.queries.expressions.aggregations.IntervalFunction
 import io.tiler.internal.queries.expressions.arithmetic.SubtractionOperation
 import io.tiler.internal.queries.expressions.comparisons.EqualsOperation
@@ -37,6 +37,22 @@ import java.util.regex.Pattern
 
 class QueryFactorySpec extends Specification {
   def factory = new QueryFactory()
+
+  def getClauseFromQuery(query, clauseName) {
+    switch (clauseName) {
+      case "aggregate":
+        query.aggregateClause()
+        break;
+      case "metric":
+        query.metricClauses().selectClause()
+        break;
+      case "point":
+        query.pointClauses().selectClause()
+        break;
+      default:
+        throw new RuntimeException("Unexpected clause '" + clauseName + "'")
+    }
+  }
 
   def "from clause with a metric name"() {
     def queryText = "from metric.name"
@@ -276,8 +292,9 @@ class QueryFactorySpec extends Specification {
     expression.operand2().value() == "text${otherQuoteSymbol}\t\b\n\r\f\'\"a\\text"
 
     where:
-    quoteSymbol << ["'", "\""]
-    otherQuoteSymbol << ["\"", "'"]
+    quoteSymbol | otherQuoteSymbol
+    "'"         | "\""
+    "\""        | "'"
   }
 
   def "group clause with one field"() {
@@ -321,13 +338,13 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    def namedExpressions = getClauseFromQuery(query, clauseName).namedExpressions()
     namedExpressions.size() == 1
     namedExpressions["fieldName"] instanceof FieldExpression
     namedExpressions["fieldName"].fieldName() == "fieldName"
 
     where:
-    clauseName << ["metric", "metric", "point"]
+    clauseName << ["aggregate", "metric", "point"]
   }
 
   def "explicitly named field"() {
@@ -340,7 +357,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    def namedExpressions = getClauseFromQuery(query, clauseName).namedExpressions()
     namedExpressions.size() == 1
     def expression = namedExpressions["newFieldName"]
     expression instanceof FieldExpression
@@ -360,7 +377,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    def namedExpressions = getClauseFromQuery(query, clauseName).namedExpressions()
     namedExpressions.size() == 2
     namedExpressions["newFieldName"] instanceof AllFunction
     namedExpressions["newFieldName2"] instanceof ConcatFunction
@@ -386,7 +403,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    def namedExpressions = getClauseFromQuery(query, clauseName).namedExpressions()
     namedExpressions.size() == 1
     namedExpressions["newFieldName"] instanceof ConcatFunction
     namedExpressions["newFieldName"].parameters().size() == 3
@@ -418,7 +435,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    def namedExpressions = getClauseFromQuery(query, clauseName).namedExpressions()
     namedExpressions.size() == 1
     def aggregateExpression = namedExpressions["newFieldName"]
     aggregateExpression instanceof IntervalFunction
@@ -443,7 +460,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def namedExpressions = query."${clauseName}Clause"().namedExpressions()
+    def namedExpressions = getClauseFromQuery(query, clauseName).namedExpressions()
     namedExpressions.size() == 1
     def aggregateExpression = namedExpressions["newFieldName"]
     aggregateExpression instanceof AllFunction
@@ -462,7 +479,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    def expression = getClauseFromQuery(query, clauseName).namedExpressions()["newFieldName"]
     expression instanceof ConcatFunction
     expression.parameters().size() == 1
     expression.parameters()[0] instanceof FieldExpression
@@ -482,7 +499,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    def expression = getClauseFromQuery(query, clauseName).namedExpressions()["newFieldName"]
     expression instanceof ConcatFunction
     expression.parameters().size() == 3
     expression.parameters()[0] instanceof FieldExpression
@@ -506,7 +523,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    def expression = getClauseFromQuery(query, clauseName).namedExpressions()["newFieldName"]
     expression instanceof NowFunction
 
     where:
@@ -523,7 +540,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    def expression = getClauseFromQuery(query, clauseName).namedExpressions()["newFieldName"]
     expression instanceof ReplaceFunction
     expression.value() instanceof ConstantExpression
     expression.value().value() == "one two"
@@ -547,7 +564,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    def expression = getClauseFromQuery(query, clauseName).namedExpressions()["newFieldName"]
     expression.class == functionClass
     expression.list() instanceof FieldExpression
     expression.list().fieldName() == "fieldName"
@@ -584,7 +601,7 @@ class QueryFactorySpec extends Specification {
     def query = factory.parseQuery(queryText)
 
     then:
-    def expression = query."${clauseName}Clause"().namedExpressions()["newFieldName"]
+    def expression = getClauseFromQuery(query, clauseName).namedExpressions()["newFieldName"]
     expression instanceof SubstringFunction
     expression.value() instanceof FieldExpression
     expression.value().fieldName() == "fieldName"
@@ -623,12 +640,12 @@ class QueryFactorySpec extends Specification {
     query.groupClause().fieldExpressions()[0].fieldName() == "fieldName"
     query.aggregateClause().namedExpressions().size() == 1
     query.aggregateClause().namedExpressions()["all"] instanceof AllFunction
-    query.metricClause().namedExpressions().size() == 1
-    query.metricClause().namedExpressions()["fieldName"] instanceof FieldExpression
-    query.metricClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
-    query.pointClause().namedExpressions().size() == 1
-    query.pointClause().namedExpressions()["fieldName"] instanceof FieldExpression
-    query.pointClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
+    query.metricClauses().selectClause().namedExpressions().size() == 1
+    query.metricClauses().selectClause().namedExpressions()["fieldName"] instanceof FieldExpression
+    query.metricClauses().selectClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
+    query.pointClauses().selectClause().namedExpressions().size() == 1
+    query.pointClauses().selectClause().namedExpressions()["fieldName"] instanceof FieldExpression
+    query.pointClauses().selectClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
   }
 
   def "it handles the order of precedence of operators correctly"() {

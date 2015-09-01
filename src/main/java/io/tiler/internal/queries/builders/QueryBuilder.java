@@ -1,17 +1,30 @@
 package io.tiler.internal.queries.builders;
 
 import io.tiler.internal.queries.*;
+import io.tiler.internal.queries.clauses.AggregateClause;
+import io.tiler.internal.queries.clauses.FromClause;
+import io.tiler.internal.queries.clauses.GroupClause;
+import io.tiler.internal.queries.clauses.WhereClause;
+import io.tiler.internal.queries.clauses.metrics.MetricClauses;
+import io.tiler.internal.queries.clauses.points.PointClauses;
+import io.tiler.internal.queries.clauses.points.SelectClause;
 
 public class QueryBuilder {
   private FromClause fromClause;
   private WhereClause whereClause;
   private GroupClause groupClause;
   private AggregateClause aggregateClause;
-  private PointClause pointClause;
-  private MetricClause metricClause;
+  private PointClausesBuilder pointClausesBuilder = new PointClausesBuilder();
+  private MetricClausesBuilder metricClausesBuilder = new MetricClausesBuilder();
 
   public Query build() {
-    return new Query(fromClause, whereClause, groupClause, aggregateClause, pointClause, metricClause);
+    return new Query(
+      fromClause,
+      whereClause,
+      groupClause,
+      aggregateClause,
+      pointClausesBuilder.build(),
+      metricClausesBuilder.build());
   }
 
   public void fromClause(FromClause fromClause) {
@@ -30,11 +43,11 @@ public class QueryBuilder {
     this.aggregateClause = aggregateClause;
   }
 
-  public void pointClause(PointClause pointClause) {
-    this.pointClause = pointClause;
+  public PointClausesBuilder pointClauses() {
+    return pointClausesBuilder;
   }
 
-  public void metricClause(MetricClause metricClause) {
-    this.metricClause = metricClause;
+  public MetricClausesBuilder metricClauses() {
+    return metricClausesBuilder;
   }
 }

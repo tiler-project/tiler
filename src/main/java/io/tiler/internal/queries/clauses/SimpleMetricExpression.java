@@ -1,4 +1,4 @@
-package io.tiler.internal.queries;
+package io.tiler.internal.queries.clauses;
 
 public class SimpleMetricExpression extends MetricExpression {
   private String metricName;

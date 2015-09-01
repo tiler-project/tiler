@@ -1,5 +1,5 @@
-package io.tiler.unit.internal.queries
-import io.tiler.internal.queries.AggregateClause
+package io.tiler.unit.internal.queries.clauses
+import io.tiler.internal.queries.clauses.AggregateClause
 import spock.lang.*
 
 class AggregateClauseSpec extends Specification {

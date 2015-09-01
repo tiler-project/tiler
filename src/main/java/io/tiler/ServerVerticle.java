@@ -9,6 +9,7 @@ import io.tiler.internal.SocketState;
 import io.tiler.internal.config.Config;
 import io.tiler.internal.config.ConfigFactory;
 import io.tiler.internal.queries.*;
+import io.tiler.internal.queries.clauses.FromClause;
 import io.vertx.java.redis.RedisClient;
 import org.simondean.vertx.async.Async;
 import org.simondean.vertx.async.AsyncResultHandlerWrapper;

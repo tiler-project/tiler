@@ -1,6 +1,6 @@
 package io.tiler.internal.queries.builders;
 
-import io.tiler.internal.queries.WhereClause;
+import io.tiler.internal.queries.clauses.WhereClause;
 import io.tiler.internal.queries.expressions.Expression;
 
 public class WhereClauseBuilder {

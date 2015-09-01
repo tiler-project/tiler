@@ -1,7 +1,9 @@
-package io.tiler.internal.queries;
+package io.tiler.internal.queries.clauses;
 
 import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.core.json.JsonArrayUtils;
+import io.tiler.internal.queries.EvaluationContext;
+import io.tiler.internal.queries.EvaluationException;
 import io.tiler.internal.queries.expressions.Expression;
 import io.tiler.internal.queries.expressions.aggregations.AggregateExpression;
 import org.vertx.java.core.json.JsonArray;

@@ -1,6 +1,6 @@
 package io.tiler.internal.queries.builders;
 
-import io.tiler.internal.queries.PointClause;
+import io.tiler.internal.queries.clauses.points.SelectClause;
 import io.tiler.internal.queries.expressions.Expression;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public class PointClauseBuilder {
     namedExpressions.put(name, Expression);
   }
   
-  public PointClause build() {
-    return new PointClause(namedExpressions);
+  public SelectClause build() {
+    return new SelectClause(namedExpressions);
   }
 }

@@ -1,4 +1,4 @@
-package io.tiler.internal.queries;
+package io.tiler.internal.queries.clauses;
 
 import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.core.json.JsonArrayUtils;

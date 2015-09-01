@@ -1,14 +1,16 @@
-package io.tiler.internal.queries;
+package io.tiler.internal.queries.clauses.points;
 
 import io.tiler.core.json.JsonArrayIterable;
+import io.tiler.internal.queries.EvaluationException;
+import io.tiler.internal.queries.clauses.ProjectionClause;
 import io.tiler.internal.queries.expressions.Expression;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Map;
 
-public class PointClause extends ProjectionClause {
-  public PointClause(Map<String, Expression> namedExpressions) {
+public class SelectClause extends ProjectionClause {
+  public SelectClause(Map<String, Expression> namedExpressions) {
     super(namedExpressions);
   }
 

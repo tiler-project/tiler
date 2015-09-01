@@ -1,9 +1,9 @@
 package io.tiler.internal.queries.builders;
 
-import io.tiler.internal.queries.FromClause;
-import io.tiler.internal.queries.MetricExpression;
-import io.tiler.internal.queries.RegexMetricExpression;
-import io.tiler.internal.queries.SimpleMetricExpression;
+import io.tiler.internal.queries.clauses.FromClause;
+import io.tiler.internal.queries.clauses.MetricExpression;
+import io.tiler.internal.queries.clauses.RegexMetricExpression;
+import io.tiler.internal.queries.clauses.SimpleMetricExpression;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;

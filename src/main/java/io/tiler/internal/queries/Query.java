@@ -1,22 +1,28 @@
 package io.tiler.internal.queries;
 
+import io.tiler.internal.queries.clauses.AggregateClause;
+import io.tiler.internal.queries.clauses.FromClause;
+import io.tiler.internal.queries.clauses.GroupClause;
+import io.tiler.internal.queries.clauses.WhereClause;
+import io.tiler.internal.queries.clauses.metrics.MetricClauses;
+import io.tiler.internal.queries.clauses.points.PointClauses;
 import org.vertx.java.core.json.JsonArray;
 
 public class Query {
-  private FromClause fromClause;
-  private WhereClause whereClause;
-  private GroupClause groupClause;
-  private AggregateClause aggregateClause;
-  private final PointClause pointClause;
-  private final MetricClause metricClause;
+  private final FromClause fromClause;
+  private final WhereClause whereClause;
+  private final GroupClause groupClause;
+  private final AggregateClause aggregateClause;
+  private final PointClauses pointClauses;
+  private final MetricClauses metricClauses;
 
-  public Query(FromClause fromClause, WhereClause whereClause, GroupClause groupClause, AggregateClause aggregateClause, PointClause pointClause, MetricClause metricClause) {
+  public Query(FromClause fromClause, WhereClause whereClause, GroupClause groupClause, AggregateClause aggregateClause, PointClauses pointClauses, MetricClauses metricClauses) {
     this.fromClause = fromClause;
     this.whereClause = whereClause;
     this.groupClause = groupClause;
     this.aggregateClause = aggregateClause;
-    this.pointClause = pointClause;
-    this.metricClause = metricClause;
+    this.pointClauses = pointClauses;
+    this.metricClauses = metricClauses;
   }
 
   public FromClause fromClause() {
@@ -33,12 +39,12 @@ public class Query {
 
   public AggregateClause aggregateClause() { return aggregateClause; }
 
-  public PointClause pointClause() {
-    return pointClause;
+  public PointClauses pointClauses() {
+    return pointClauses;
   }
 
-  public MetricClause metricClause() {
-    return metricClause;
+  public MetricClauses metricClauses() {
+    return metricClauses;
   }
 
   public boolean hasWhereClause() {
@@ -51,14 +57,6 @@ public class Query {
 
   public boolean hasAggregateClause() {
     return aggregateClause != null;
-  }
-
-  public boolean hasPointClause() {
-    return pointClause != null;
-  }
-
-  public boolean hasMetricClause() {
-    return metricClause != null;
   }
 
   public JsonArray applyToMetrics(JsonArray metrics) throws EvaluationException {
@@ -76,13 +74,8 @@ public class Query {
       aggregateClause.applyToMetrics(transformedMetrics);
     }
 
-    if (hasPointClause()) {
-      pointClause.applyToMetrics(transformedMetrics);
-    }
-
-    if (hasMetricClause()) {
-      transformedMetrics = metricClause.applyToMetrics(transformedMetrics);
-    }
+    pointClauses.applyToMetrics(transformedMetrics);
+    metricClauses.applyToMetrics(transformedMetrics);
 
     return transformedMetrics;
   }

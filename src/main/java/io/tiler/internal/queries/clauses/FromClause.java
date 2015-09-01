@@ -1,4 +1,4 @@
-package io.tiler.internal.queries;
+package io.tiler.internal.queries.clauses;
 
 import io.tiler.core.json.JsonArrayIterable;
 import org.vertx.java.core.json.JsonArray;
@@ -7,7 +7,6 @@ import org.vertx.java.core.json.JsonObject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public class FromClause {
   private List<MetricExpression> metricExpressions;

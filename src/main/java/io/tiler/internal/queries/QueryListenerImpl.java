@@ -228,7 +228,7 @@ public class QueryListenerImpl implements QueryListener {
       builder.namedExpression(namedExpression.name(), namedExpression.expression());
     }
 
-    queryBuilder.pointClause(builder.build());
+    queryBuilder.pointClauses().selectClause(builder.build());
   }
 
   @Override
@@ -245,7 +245,7 @@ public class QueryListenerImpl implements QueryListener {
       builder.namedExpression(namedExpression.name(), namedExpression.expression());
     }
 
-    queryBuilder.metricClause(builder.build());
+    queryBuilder.metricClauses().selectClause(builder.build());
   }
 
   @Override
