@@ -3,6 +3,8 @@ package io.tiler.internal.queries.clauses.points;
 import io.tiler.internal.queries.EvaluationException;
 import org.vertx.java.core.json.JsonArray;
 
+import java.time.Clock;
+
 public class PointClauses {
   private final SelectClause selectClause;
   private final SortClause sortClause;
@@ -28,9 +30,13 @@ public class PointClauses {
     return sortClause;
   }
 
-  public void applyToMetrics(JsonArray metrics) throws EvaluationException {
+  public void applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     if (hasSelectClause()) {
-      selectClause.applyToMetrics(metrics);
+      selectClause.applyToMetrics(clock, metrics);
+    }
+
+    if (hasSortClause()) {
+      sortClause.applyToMetrics(clock, metrics);
     }
   }
 }

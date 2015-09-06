@@ -6,7 +6,12 @@ import org.vertx.java.core.json.JsonArray
 import org.vertx.java.core.json.JsonObject
 import spock.lang.*
 
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+
 class QuerySpec extends Specification {
+  def Clock clock = Clock.fixed(Instant.EPOCH, ZoneId.of("UTC"));
   def factory = new QueryFactory()
 
   def "it handles an evaluation exception"() {
@@ -20,7 +25,7 @@ class QuerySpec extends Specification {
           .addObject(new JsonObject())))
 
     when:
-    query.applyToMetrics(metrics)
+    query.applyToMetrics(clock, metrics)
 
     then:
     def e = thrown(EvaluationException)

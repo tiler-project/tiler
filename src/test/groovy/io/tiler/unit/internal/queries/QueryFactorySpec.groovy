@@ -2,6 +2,8 @@ package io.tiler.unit.internal.queries
 
 import io.tiler.internal.queries.InvalidQueryException
 import io.tiler.internal.queries.QueryFactory
+import io.tiler.internal.queries.clauses.SortDirection
+import io.tiler.internal.queries.clauses.SortExpression
 import io.tiler.internal.queries.expressions.aggregations.AllFunction
 import io.tiler.internal.queries.expressions.arithmetic.AdditionOperation
 import io.tiler.internal.queries.expressions.arithmetic.DivisionOperation
@@ -48,6 +50,19 @@ class QueryFactorySpec extends Specification {
         break;
       case "point":
         query.pointClauses().selectClause()
+        break;
+      default:
+        throw new RuntimeException("Unexpected clause '" + clauseName + "'")
+    }
+  }
+
+  def getSortClauseFromQuery(query, clauseName) {
+    switch (clauseName) {
+      case "metric":
+        query.metricClauses().sortClause()
+        break;
+      case "point":
+        query.pointClauses().sortClause()
         break;
       default:
         throw new RuntimeException("Unexpected clause '" + clauseName + "'")
@@ -614,6 +629,114 @@ class QueryFactorySpec extends Specification {
     clauseName << ["aggregate", "metric", "point"]
   }
 
+  def "sort clause"() {
+    def queryText = """
+      from metric.name
+      $clauseName fieldName
+      sort sortFieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def selectClause = getClauseFromQuery(query, clauseName)
+    selectClause.namedExpressions().size() == 1
+    selectClause.namedExpressions()["fieldName"] instanceof FieldExpression
+    selectClause.namedExpressions()["fieldName"].fieldName() == "fieldName"
+    def sortClause = getSortClauseFromQuery(query, clauseName)
+    sortClause.sortExpressions().size() == 1
+    sortClause.sortExpressions()[0] instanceof SortExpression
+    sortClause.sortExpressions()[0].expression() instanceof FieldExpression
+    sortClause.sortExpressions()[0].expression().fieldName() == "sortFieldName"
+    sortClause.sortExpressions()[0].sortDirection() == SortDirection.Ascending
+
+    where:
+    clauseName << ["metric", "point"]
+  }
+
+  def "sort clause with multiple expressions"() {
+    def queryText = """
+      from metric.name
+      $clauseName fieldName
+      sort sortFieldName, sortFieldName2
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def selectClause = getClauseFromQuery(query, clauseName)
+    selectClause.namedExpressions().size() == 1
+    selectClause.namedExpressions()["fieldName"] instanceof FieldExpression
+    selectClause.namedExpressions()["fieldName"].fieldName() == "fieldName"
+    def sortClause = getSortClauseFromQuery(query, clauseName)
+    sortClause.sortExpressions().size() == 2
+    sortClause.sortExpressions()[0] instanceof SortExpression
+    sortClause.sortExpressions()[0].expression() instanceof FieldExpression
+    sortClause.sortExpressions()[0].expression().fieldName() == "sortFieldName"
+    sortClause.sortExpressions()[0].sortDirection() == SortDirection.Ascending
+    sortClause.sortExpressions()[1] instanceof SortExpression
+    sortClause.sortExpressions()[1].expression() instanceof FieldExpression
+    sortClause.sortExpressions()[1].expression().fieldName() == "sortFieldName2"
+    sortClause.sortExpressions()[1].sortDirection() == SortDirection.Ascending
+
+    where:
+    clauseName << ["metric", "point"]
+  }
+
+  def "sort clause with explicit ascending sort order"() {
+    def queryText = """
+      from metric.name
+      $clauseName fieldName
+      sort sortFieldName asc
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def selectClause = getClauseFromQuery(query, clauseName)
+    selectClause.namedExpressions().size() == 1
+    selectClause.namedExpressions()["fieldName"] instanceof FieldExpression
+    selectClause.namedExpressions()["fieldName"].fieldName() == "fieldName"
+    def sortClause = getSortClauseFromQuery(query, clauseName)
+    sortClause.sortExpressions().size() == 1
+    sortClause.sortExpressions()[0] instanceof SortExpression
+    sortClause.sortExpressions()[0].expression() instanceof FieldExpression
+    sortClause.sortExpressions()[0].expression().fieldName() == "sortFieldName"
+    sortClause.sortExpressions()[0].sortDirection() == SortDirection.Ascending
+
+    where:
+    clauseName << ["metric", "point"]
+  }
+
+  def "sort clause with explicit descending sort order"() {
+    def queryText = """
+      from metric.name
+      $clauseName fieldName
+      sort sortFieldName desc
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def selectClause = getClauseFromQuery(query, clauseName)
+    selectClause.namedExpressions().size() == 1
+    selectClause.namedExpressions()["fieldName"] instanceof FieldExpression
+    selectClause.namedExpressions()["fieldName"].fieldName() == "fieldName"
+    def sortClause = getSortClauseFromQuery(query, clauseName)
+    sortClause.sortExpressions().size() == 1
+    sortClause.sortExpressions()[0] instanceof SortExpression
+    sortClause.sortExpressions()[0].expression() instanceof FieldExpression
+    sortClause.sortExpressions()[0].expression().fieldName() == "sortFieldName"
+    sortClause.sortExpressions()[0].sortDirection() == SortDirection.Descending
+
+    where:
+    clauseName << ["metric", "point"]
+  }
+
   def "all clauses"() {
     def queryText = """
       from metric.name
@@ -621,7 +744,9 @@ class QueryFactorySpec extends Specification {
       group fieldName
       aggregate all() as all
       metric fieldName
+      sort fieldName
       point fieldName
+      sort fieldName
     """
 
     when:
@@ -643,9 +768,19 @@ class QueryFactorySpec extends Specification {
     query.metricClauses().selectClause().namedExpressions().size() == 1
     query.metricClauses().selectClause().namedExpressions()["fieldName"] instanceof FieldExpression
     query.metricClauses().selectClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
+    query.metricClauses().sortClause().sortExpressions().size() == 1
+    query.metricClauses().sortClause().sortExpressions()[0] instanceof SortExpression
+    query.metricClauses().sortClause().sortExpressions()[0].expression() instanceof FieldExpression
+    query.metricClauses().sortClause().sortExpressions()[0].expression().fieldName() == "fieldName"
+    query.metricClauses().sortClause().sortExpressions()[0].sortDirection() == SortDirection.Ascending
     query.pointClauses().selectClause().namedExpressions().size() == 1
     query.pointClauses().selectClause().namedExpressions()["fieldName"] instanceof FieldExpression
     query.pointClauses().selectClause().namedExpressions()["fieldName"].fieldName() == "fieldName"
+    query.pointClauses().sortClause().sortExpressions().size() == 1
+    query.pointClauses().sortClause().sortExpressions()[0] instanceof SortExpression
+    query.pointClauses().sortClause().sortExpressions()[0].expression() instanceof FieldExpression
+    query.pointClauses().sortClause().sortExpressions()[0].expression().fieldName() == "fieldName"
+    query.pointClauses().sortClause().sortExpressions()[0].sortDirection() == SortDirection.Ascending
   }
 
   def "it handles the order of precedence of operators correctly"() {

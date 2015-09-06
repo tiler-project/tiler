@@ -4,8 +4,9 @@ import io.tiler.core.regex.InvalidPatternOptionsException;
 import io.tiler.core.regex.PatternOptionsParser;
 import io.tiler.core.time.TimePeriodParser;
 import io.tiler.internal.queries.builders.*;
+import io.tiler.internal.queries.clauses.SortDirection;
+import io.tiler.internal.queries.clauses.SortExpression;
 import io.tiler.internal.queries.expressions.Expression;
-import io.tiler.internal.queries.expressions.aggregations.AggregateExpression;
 import io.tiler.internal.queries.expressions.aggregations.AllFunction;
 import io.tiler.internal.queries.expressions.aggregations.IntervalFunction;
 import io.tiler.internal.queries.expressions.arithmetic.AdditionOperation;
@@ -42,6 +43,7 @@ public class QueryListenerImpl implements QueryListener {
   private QueryBuilder queryBuilder;
   private HashMap<ParserRuleContext, Expression> expressions = new HashMap<>();
   private HashMap<ParserRuleContext, NamedExpression> namedExpressions = new HashMap<>();
+  private HashMap<ParserRuleContext, SortExpression> sortExpressions = new HashMap<>();
   private String queryText;
 
   public QueryListenerImpl(String queryText) {
@@ -215,13 +217,13 @@ public class QueryListenerImpl implements QueryListener {
   }
 
   @Override
-  public void enterPointClause(QueryParser.PointClauseContext ctx) {
+  public void enterPointSelectClause(QueryParser.PointSelectClauseContext ctx) {
 
   }
 
   @Override
-  public void exitPointClause(QueryParser.PointClauseContext ctx) {
-    PointClauseBuilder builder = new PointClauseBuilder();
+  public void exitPointSelectClause(QueryParser.PointSelectClauseContext ctx) {
+    PointSelectClauseBuilder builder = new PointSelectClauseBuilder();
 
     for (QueryParser.NamedExprContext namedExpr : ctx.namedExprs) {
       NamedExpression namedExpression = namedExpressions.get(namedExpr);
@@ -232,13 +234,30 @@ public class QueryListenerImpl implements QueryListener {
   }
 
   @Override
-  public void enterMetricClause(QueryParser.MetricClauseContext ctx) {
+  public void enterPointSortClause(QueryParser.PointSortClauseContext ctx) {
 
   }
 
   @Override
-  public void exitMetricClause(QueryParser.MetricClauseContext ctx) {
-    MetricClauseBuilder builder = new MetricClauseBuilder();
+  public void exitPointSortClause(QueryParser.PointSortClauseContext ctx) {
+    PointSortClauseBuilder builder = new PointSortClauseBuilder();
+
+    for (QueryParser.SortExprContext sortExpr : ctx.sortExprs) {
+      SortExpression sortExpression = sortExpressions.get(sortExpr);
+      builder.sortExpression(sortExpression);
+    }
+
+    queryBuilder.pointClauses().sortClause(builder.build());
+  }
+
+  @Override
+  public void enterMetricSelectClause(QueryParser.MetricSelectClauseContext ctx) {
+
+  }
+
+  @Override
+  public void exitMetricSelectClause(QueryParser.MetricSelectClauseContext ctx) {
+    MetricSelectClauseBuilder builder = new MetricSelectClauseBuilder();
 
     for (QueryParser.NamedExprContext namedExpr : ctx.namedExprs) {
       NamedExpression namedExpression = namedExpressions.get(namedExpr);
@@ -246,6 +265,23 @@ public class QueryListenerImpl implements QueryListener {
     }
 
     queryBuilder.metricClauses().selectClause(builder.build());
+  }
+
+  @Override
+  public void enterMetricSortClause(QueryParser.MetricSortClauseContext ctx) {
+
+  }
+
+  @Override
+  public void exitMetricSortClause(QueryParser.MetricSortClauseContext ctx) {
+    MetricSortClauseBuilder builder = new MetricSortClauseBuilder();
+
+    for (QueryParser.SortExprContext sortExpr : ctx.sortExprs) {
+      SortExpression sortExpression = sortExpressions.get(sortExpr);
+      builder.sortExpression(sortExpression);
+    }
+
+    queryBuilder.metricClauses().sortClause(builder.build());
   }
 
   @Override
@@ -559,6 +595,38 @@ public class QueryListenerImpl implements QueryListener {
 
     NamedExpression namedExpression = new NamedExpression(name, expression);
     namedExpressions.put(ctx, namedExpression);
+  }
+
+  @Override
+  public void enterSortExpr(QueryParser.SortExprContext ctx) {
+  }
+
+  @Override
+  public void exitSortExpr(QueryParser.SortExprContext ctx) {
+    Expression expression = expressions.get(ctx.expr());
+    SortDirection sortDirection;
+
+    if (ctx.sortDirection == null) {
+      sortDirection = SortDirection.Ascending;
+    }
+    else {
+      switch (ctx.sortDirection.getText()) {
+        case "asc":
+          sortDirection = SortDirection.Ascending;
+          break;
+        case "desc":
+          sortDirection = SortDirection.Descending;
+          break;
+        default:
+          throw new RuntimeException("Unexpected sort direction '" + ctx.sortDirection.getText() + "'");
+      }
+    }
+
+    SortExpression sortExpression = new SortExpression(
+      createQueryContext(ctx),
+      expression,
+      sortDirection);
+    sortExpressions.put(ctx, sortExpression);
   }
 
   @Override

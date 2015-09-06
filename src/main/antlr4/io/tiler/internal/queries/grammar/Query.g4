@@ -1,12 +1,19 @@
 grammar Query;
-query : fromClause whereClause? groupClause? aggregateClause? metricClause? pointClause? ;
+query : fromClause
+        whereClause?
+        groupClause?
+        aggregateClause?
+        (metricSelectClause metricSortClause?)?
+        (pointSelectClause pointSortClause?)? ;
 
 fromClause : FROM exprs+=metricExpr (',' exprs+=metricExpr)* ;
 whereClause : WHERE expr ;
 groupClause : GROUP fields+=ID (',' fields+=ID)* ;
 aggregateClause : AGGREGATE namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
-pointClause : POINT namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
-metricClause : METRIC namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
+pointSelectClause : POINT namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
+pointSortClause : SORT sortExprs+=sortExpr (',' sortExprs+=sortExpr)* ;
+metricSelectClause : METRIC namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
+metricSortClause : SORT sortExprs+=sortExpr (',' sortExprs+=sortExpr)* ;
 
 expr : ID                                                                                     # Field
      | constant=(INTEGER | STRING | TIME_PERIOD | REGEX)                                      # Constant
@@ -23,6 +30,7 @@ metricExpr : ID
            | REGEX ;
 namedExpr : ID
           | expr AS ID ;
+sortExpr : expr sortDirection=(ASC | DESC)?;
 
 FROM : 'from' ;
 WHERE : 'where' ;
@@ -30,7 +38,10 @@ GROUP : 'group' ;
 AGGREGATE : 'aggregate' ;
 POINT : 'point' ;
 METRIC : 'metric' ;
+SORT : 'sort' ;
 AS : 'as' ;
+ASC : 'asc' ;
+DESC : 'desc' ;
 
 FORWARD_SLASH : '/' ;
 ASTERISK : '*' ;

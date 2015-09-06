@@ -9,10 +9,10 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.Map;
 
-public class ProjectionClause {
+public class BaseSelectClause {
   private final Map<String, Expression> namedExpressions;
 
-  public ProjectionClause(Map<String, Expression> namedExpressions) {
+  public BaseSelectClause(Map<String, Expression> namedExpressions) {
     this.namedExpressions = Collections.unmodifiableMap(namedExpressions);
   }
 
@@ -20,16 +20,16 @@ public class ProjectionClause {
     return namedExpressions;
   }
 
-  protected JsonObject applyToFields(JsonObject fields) throws EvaluationException {
-    EvaluationContext context = new EvaluationContext(Clock.systemUTC(), fields);
-    JsonObject transformedJsonObject = new JsonObject();
+  protected JsonObject applyToItem(Clock clock, JsonObject item) throws EvaluationException {
+    EvaluationContext context = new EvaluationContext(clock, item);
+    JsonObject transformedItem = new JsonObject();
 
     for (Map.Entry<String, Expression> namedExpression : namedExpressions().entrySet()) {
       String name = namedExpression.getKey();
       Object value = namedExpression.getValue().evaluate(context);
-      transformedJsonObject.putValue(name, value);
+      transformedItem.putValue(name, value);
     }
 
-    return transformedJsonObject;
+    return transformedItem;
   }
 }

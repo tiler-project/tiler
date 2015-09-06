@@ -5,11 +5,11 @@ import io.tiler.internal.queries.expressions.Expression;
 
 import java.util.HashMap;
 
-public class PointClauseBuilder {
+public class PointSelectClauseBuilder {
   HashMap<String, Expression> namedExpressions = new HashMap<>();
 
-  public void namedExpression(String name, Expression Expression) {
-    namedExpressions.put(name, Expression);
+  public void namedExpression(String name, Expression expression) {
+    namedExpressions.put(name, expression);
   }
   
   public SelectClause build() {

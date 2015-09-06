@@ -8,6 +8,8 @@ import io.tiler.internal.queries.clauses.metrics.MetricClauses;
 import io.tiler.internal.queries.clauses.points.PointClauses;
 import org.vertx.java.core.json.JsonArray;
 
+import java.time.Clock;
+
 public class Query {
   private final FromClause fromClause;
   private final WhereClause whereClause;
@@ -59,11 +61,11 @@ public class Query {
     return aggregateClause != null;
   }
 
-  public JsonArray applyToMetrics(JsonArray metrics) throws EvaluationException {
+  public JsonArray applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     JsonArray transformedMetrics = copyMetrics(metrics);
 
     if (hasWhereClause()) {
-      whereClause.applyToMetrics(transformedMetrics);
+      whereClause.applyToMetrics(clock, transformedMetrics);
     }
 
     if (hasGroupClause()) {
@@ -71,11 +73,11 @@ public class Query {
     }
 
     if (hasAggregateClause()) {
-      aggregateClause.applyToMetrics(transformedMetrics);
+      aggregateClause.applyToMetrics(clock, transformedMetrics);
     }
 
-    pointClauses.applyToMetrics(transformedMetrics);
-    metricClauses.applyToMetrics(transformedMetrics);
+    pointClauses.applyToMetrics(clock, transformedMetrics);
+    transformedMetrics = metricClauses.applyToMetrics(clock, transformedMetrics);
 
     return transformedMetrics;
   }

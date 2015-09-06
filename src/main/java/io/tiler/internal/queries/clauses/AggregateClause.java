@@ -23,19 +23,19 @@ public class AggregateClause {
     return namedExpressions;
   }
 
-  public void applyToMetrics(JsonArray metrics) throws EvaluationException {
+  public void applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      JsonArray transformedPoints = applyToPoints(metric.getArray("points"));
+      JsonArray transformedPoints = applyToPoints(clock, metric.getArray("points"));
       metric.putArray("points", transformedPoints);
     }
   }
 
-  private JsonArray applyToPoints(JsonArray points) throws EvaluationException {
+  private JsonArray applyToPoints(Clock clock, JsonArray points) throws EvaluationException {
     // TODO: Maybe combine this method with the equivalent for the group clause
     HashMap<ArrayList<Object>, JsonObject> aggregatePoints = new HashMap<>();
 
     for (JsonObject point : new JsonArrayIterable<JsonObject>(points)) {
-      EvaluationContext context = new EvaluationContext(Clock.systemUTC(), point);
+      EvaluationContext context = new EvaluationContext(clock, point);
       ArrayList<Object> aggregateKey = new ArrayList<>();
 
       for (Map.Entry<String, Expression> aggregateClauseEntry : namedExpressions.entrySet()) {

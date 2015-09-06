@@ -2,29 +2,30 @@ package io.tiler.internal.queries.clauses.points;
 
 import io.tiler.core.json.JsonArrayIterable;
 import io.tiler.internal.queries.EvaluationException;
-import io.tiler.internal.queries.clauses.ProjectionClause;
+import io.tiler.internal.queries.clauses.BaseSelectClause;
 import io.tiler.internal.queries.expressions.Expression;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.time.Clock;
 import java.util.Map;
 
-public class SelectClause extends ProjectionClause {
+public class SelectClause extends BaseSelectClause {
   public SelectClause(Map<String, Expression> namedExpressions) {
     super(namedExpressions);
   }
 
-  public void applyToMetrics(JsonArray metrics) throws EvaluationException {
+  public void applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      applyToPoints(metric);
+      applyToPoints(clock, metric);
     }
   }
 
-  private void applyToPoints(JsonObject metric) throws EvaluationException {
+  private void applyToPoints(Clock clock, JsonObject metric) throws EvaluationException {
     JsonArray transformedPoints = new JsonArray();
 
     for (JsonObject point : new JsonArrayIterable<JsonObject>(metric.getArray("points"))) {
-      JsonObject transformedPoint = applyToFields(point);
+      JsonObject transformedPoint = applyToItem(clock, point);
       transformedPoints.addObject(transformedPoint);
     }
 

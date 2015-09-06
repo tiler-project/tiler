@@ -10,7 +10,7 @@ import org.vertx.java.core.json.JsonObject;
 import java.time.Clock;
 
 public class WhereClause {
-  private Expression expression;
+  private final Expression expression;
 
   public WhereClause(Expression expression) {
     this.expression = expression;
@@ -20,17 +20,17 @@ public class WhereClause {
     return expression;
   }
 
-  public void applyToMetrics(JsonArray metrics) throws EvaluationException {
+  public void applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {
-      applyToMetric(metric);
+      applyToMetric(clock, metric);
     }
   }
 
-  private void applyToMetric(JsonObject metric) throws EvaluationException {
+  private void applyToMetric(Clock clock, JsonObject metric) throws EvaluationException {
     JsonArray matchingPoints = new JsonArray();
 
     for (JsonObject point : new JsonArrayIterable<JsonObject>(metric.getArray("points"))) {
-      if (pointMatches(point)) {
+      if (pointMatches(clock, point)) {
         matchingPoints.addObject(point);
       }
     }
@@ -38,8 +38,8 @@ public class WhereClause {
     metric.putArray("points", matchingPoints);
   }
 
-  private boolean pointMatches(JsonObject point) throws EvaluationException {
-    EvaluationContext context = new EvaluationContext(Clock.systemUTC(), point);
+  private boolean pointMatches(Clock clock, JsonObject point) throws EvaluationException {
+    EvaluationContext context = new EvaluationContext(clock, point);
     Object value = expression.evaluate(context);
 
     if (!(value instanceof Boolean)) {

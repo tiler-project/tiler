@@ -3,11 +3,13 @@ package io.tiler.internal.queries.clauses.metrics;
 import io.tiler.internal.queries.EvaluationException;
 import org.vertx.java.core.json.JsonArray;
 
-public class MetricClauses {
-  private final io.tiler.internal.queries.clauses.metrics.SelectClause selectClause;
-  private final io.tiler.internal.queries.clauses.metrics.SortClause sortClause;
+import java.time.Clock;
 
-  public MetricClauses(io.tiler.internal.queries.clauses.metrics.SelectClause selectClause, SortClause sortClause) {
+public class MetricClauses {
+  private final SelectClause selectClause;
+  private final SortClause sortClause;
+
+  public MetricClauses(SelectClause selectClause, SortClause sortClause) {
     this.selectClause = selectClause;
     this.sortClause = sortClause;
   }
@@ -28,9 +30,15 @@ public class MetricClauses {
     return sortClause;
   }
 
-  public void applyToMetrics(JsonArray metrics) throws EvaluationException {
+  public JsonArray applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     if (hasSelectClause()) {
-      selectClause.applyToMetrics(metrics);
+      metrics = selectClause.applyToMetrics(clock, metrics);
     }
+
+    if (hasSortClause()) {
+      metrics = sortClause.applyToMetrics(clock, metrics);
+    }
+
+    return metrics;
   }
 }
