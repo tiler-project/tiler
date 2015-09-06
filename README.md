@@ -44,3 +44,19 @@ Request Body:
 
 View the metric by browsing to http://localhost:8080/dashboards/api
 
+### Query Metrics
+
+HTTP POST http://localhost:8080/api/v1/query
+
+Headers:
+
+  * Content-Type: application/json
+
+Request Body:
+
+``` json
+{
+    "queries": [
+        "from /^.*$/"
+    ]
+}```
