@@ -16,7 +16,7 @@ class QuerySpec extends Specification {
 
   def "it handles an evaluation exception"() {
     def queryText = "from metric.name\n" +
-                    "where true && 1"
+                    "where doesNotExist == true"
     def query = factory.parseQuery(queryText)
     def metrics = new JsonArray()
       .addObject(new JsonObject()
@@ -30,7 +30,7 @@ class QuerySpec extends Specification {
     then:
     def e = thrown(EvaluationException)
     e.message == "Line 2:6\n" +
-                 "where true && 1\n" +
+                 "where doesNotExist == true\n" +
                  "      ^ operand1 cannot be null"
   }
 }

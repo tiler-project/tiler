@@ -16,7 +16,7 @@ metricSelectClause : METRIC namedExprs+=namedExpr (',' namedExprs+=namedExpr)* ;
 metricSortClause : SORT sortExprs+=sortExpr (',' sortExprs+=sortExpr)* ;
 
 expr : ID                                                                                     # Field
-     | constant=(INTEGER | STRING | TIME_PERIOD | REGEX)                                      # Constant
+     | constant=(BOOLEAN | INTEGER | STRING | TIME_PERIOD | REGEX)                            # Constant
      | func=ID '(' (exprs+=expr (',' exprs+=expr)*)? ')'                                      # Func
      | op=EXCLAMATION_MARK expr                                                               # UnaryOp
      | expr op=(ASTERISK | FORWARD_SLASH) expr                                                # BinaryOp
@@ -59,11 +59,13 @@ MATCHES : '~=' ;
 AND : '&&' ;
 OR : '||' ;
 
-REGEX : '/' ('\\/'|~[/])* '/' [dixmsuU]* ;
-TIME_PERIOD : [1-9][0-9]*[usmhdw] ;
+BOOLEAN : ('true'|'false') ;
 INTEGER : ('0'|[1-9][0-9]*|'-0'|'-'[1-9][0-9]*) ;
-ID : [a-zA-Z_] [a-zA-Z_\-0-9]* ('.' [a-zA-Z_] [a-zA-Z_\-0-9]*)* ;
 STRING : '\'' ('\\\''|~['])* '\''
        | '"' ('\\"'|~["])* '"';
+TIME_PERIOD : [1-9][0-9]*[usmhdw] ;
+REGEX : '/' ('\\/'|~[/])* '/' [dixmsuU]* ;
+
+ID : [a-zA-Z_] [a-zA-Z_\-0-9]* ('.' [a-zA-Z_] [a-zA-Z_\-0-9]*)* ;
 
 WS : [ \t\r\n]+ -> skip ;

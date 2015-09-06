@@ -133,7 +133,31 @@ class QueryFactorySpec extends Specification {
     metricExpressions[1].pattern().flags() == 0
   }
 
-  def "where clause with a integer or long constant"() {
+  def "expression with a boolean constant"() {
+    def queryText = """
+      from metric.name
+      where fieldName == $constantText
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def expression = query.whereClause().expression()
+    expression instanceof EqualsOperation
+    expression.operand1() instanceof FieldExpression
+    expression.operand1().fieldName() == "fieldName"
+    expression.operand2() instanceof ConstantExpression
+    expression.operand2().value().class == constantType
+    expression.operand2().value() == constantValue
+
+    where:
+    constantText | constantValue | constantType
+    "true"       | true          | Boolean
+    "false"      | false         | Boolean
+  }
+
+  def "expression with a integer or long constant"() {
     def queryText = """
       from metric.name
       where fieldName == $constantText
@@ -164,7 +188,7 @@ class QueryFactorySpec extends Specification {
     Long.MIN_VALUE.toString()                   | Long.MIN_VALUE                 | Long
   }
 
-  def "where clause with a regex match operation"() {
+  def "expression with a regex match operation"() {
     def queryText = """
       from metric.name
       where fieldName ~= /value/i
@@ -184,7 +208,7 @@ class QueryFactorySpec extends Specification {
     expression.operand2().value().flags() == Pattern.CASE_INSENSITIVE
   }
 
-  def "where clause with an logical operation"() {
+  def "expression with a logical operation"() {
     def queryText = """
       from metric.name
       where fieldName == 1 && fieldName2 == 2

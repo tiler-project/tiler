@@ -481,6 +481,9 @@ public class QueryListenerImpl implements QueryListener {
     Expression expression;
 
     switch (ctx.constant.getType()) {
+      case QueryLexer.BOOLEAN:
+        expression = new ConstantExpression<>(createQueryContext(ctx), Boolean.parseBoolean(ctx.getText()));
+        break;
       case QueryLexer.INTEGER:
         long value = Long.parseLong(ctx.getText());
 
