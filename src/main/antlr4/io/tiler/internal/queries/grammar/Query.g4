@@ -18,6 +18,7 @@ metricSortClause : SORT sortExprs+=sortExpr (',' sortExprs+=sortExpr)* ;
 expr : ID                                                                                     # Field
      | constant=(INTEGER | STRING | TIME_PERIOD | REGEX)                                      # Constant
      | func=ID '(' (exprs+=expr (',' exprs+=expr)*)? ')'                                      # Func
+     | op=EXCLAMATION_MARK expr                                                               # UnaryOp
      | expr op=(ASTERISK | FORWARD_SLASH) expr                                                # BinaryOp
      | expr op=(PLUS | MINUS) expr                                                            # BinaryOp
      | expr op=(LESS_THAN | GREATER_THAN | LESS_THAN_OR_EQUALS | GREATER_THAN_OR_EQUALS) expr # BinaryOp
@@ -43,8 +44,9 @@ AS : 'as' ;
 ASC : 'asc' ;
 DESC : 'desc' ;
 
-FORWARD_SLASH : '/' ;
+EXCLAMATION_MARK : '!' ;
 ASTERISK : '*' ;
+FORWARD_SLASH : '/' ;
 PLUS : '+' ;
 MINUS : '-' ;
 LESS_THAN : '<' ;

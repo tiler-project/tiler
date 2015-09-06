@@ -32,6 +32,7 @@ import io.tiler.internal.queries.expressions.fields.FieldExpression
 import io.tiler.internal.queries.expressions.functions.SubstringFunction
 import io.tiler.internal.queries.expressions.functions.SumFunction
 import io.tiler.internal.queries.expressions.logical.AndOperation
+import io.tiler.internal.queries.expressions.logical.NotOperation
 import io.tiler.internal.queries.expressions.logical.OrOperation
 import spock.lang.*
 
@@ -207,6 +208,26 @@ class QueryFactorySpec extends Specification {
     expression.operand2().operand2().value() == 2
   }
 
+  def "expression with a unary operation"() {
+    def queryText = """
+      from metric.name
+      where ${operator}fieldName
+    """
+
+    when:
+    def query = factory.parseQuery(queryText)
+
+    then:
+    def expression = query.whereClause().expression()
+    operationClass.isInstance(expression)
+    expression.operand() instanceof FieldExpression
+    expression.operand().fieldName() == "fieldName"
+
+    where:
+    operator | operationClass
+    "!"      | NotOperation
+  }
+
   def "expression with a binary operation"() {
     def queryText = """
       from metric.name
@@ -219,12 +240,10 @@ class QueryFactorySpec extends Specification {
     then:
     def expression = query.whereClause().expression()
     operationClass.isInstance(expression)
-    def operand1 = expression.operand1()
-    operand1 instanceof FieldExpression
-    operand1.fieldName() == "fieldName"
-    def operand2 = expression.operand2()
-    operand2 instanceof ConstantExpression
-    operand2.value() == 1
+    expression.operand1() instanceof FieldExpression
+    expression.operand1().fieldName() == "fieldName"
+    expression.operand2() instanceof ConstantExpression
+    expression.operand2().value() == 1
 
     where:
     operator | operationClass
@@ -797,39 +816,43 @@ class QueryFactorySpec extends Specification {
 
     where:
     whereClauseText        | outerExpressionClass
-    // Level 1
+    // Level 1 (only one operator in Level 1)
+    // Levels 1 and 2
+    "where !1 * 2"         | MultiplicationOperation
+    "where 1 * !2"         | MultiplicationOperation
+    // Level 2
     "where 1 * 2 / 3"      | DivisionOperation
     "where 1 / 2 * 3"      | MultiplicationOperation
-    // Levels 1 and 2
+    // Levels 2 and 3
     "where 1 * 2 + 3"      | AdditionOperation
     "where 1 + 2 * 3"      | AdditionOperation
-    // Level 2
+    // Level 3
     "where 1 + 2 - 3"      | SubtractionOperation
     "where 1 - 2 + 3"      | AdditionOperation
-    // Levels 2 and 3
+    // Levels 3 and 4
     "where 1 + 2 < 3"      | LessThanOperation
     "where 1 < 2 + 3"      | LessThanOperation
-    // Level 3
+    // Level 4
     "where 1 < 2 > 3"      | GreaterThanOperation
     "where 1 > 2 < 3"      | LessThanOperation
     "where 1 > 2 <= 3"     | LessThanOrEqualsOperation
     "where 1 <= 2 > 3"     | GreaterThanOperation
     "where 1 <= 2 >= 3"    | GreaterThanOrEqualsOperation
     "where 1 >= 2 <= 3"    | LessThanOrEqualsOperation
-    // Levels 3 and 4
+    // Levels 4 and 5
     "where 1 < 2 == 3"     | EqualsOperation
     "where 1 == 2 < 3"     | EqualsOperation
-    // Level 4
+    // Level 5
     "where 1 == 2 != 3"    | NotEqualsOperation
     "where 1 != 2 == 3"    | EqualsOperation
-    // Levels 4 and 5
+    // Levels 5 and 6
     "where 1 == 2 ~= /3/"  | RegexMatchOperation
     "where 1 ~= /2/ == 3"  | RegexMatchOperation
-    // Only one operator in Level 5
-    // Levels 5 and 6
+    // Level 6 (only one operator in Level 6)
+    // Levels 6 and 7
     "where 1 ~= /2/ && 3"  | AndOperation
     "where 1 && 2 ~= /3/"  | AndOperation
-    // Level 6
+    // Level 7
     "where 1 && 2 || 3"    | OrOperation
     "where 1 || 2 && 3"    | AndOperation
   }

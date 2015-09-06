@@ -18,6 +18,7 @@ import io.tiler.internal.queries.expressions.constants.ConstantExpression;
 import io.tiler.internal.queries.expressions.fields.FieldExpression;
 import io.tiler.internal.queries.expressions.functions.*;
 import io.tiler.internal.queries.expressions.logical.AndOperation;
+import io.tiler.internal.queries.expressions.logical.NotOperation;
 import io.tiler.internal.queries.expressions.logical.OrOperation;
 import io.tiler.internal.queries.grammar.QueryLexer;
 import io.tiler.internal.queries.grammar.QueryListener;
@@ -296,6 +297,27 @@ public class QueryListenerImpl implements QueryListener {
   }
 
   @Override
+  public void enterUnaryOp(QueryParser.UnaryOpContext ctx) {
+
+  }
+
+  @Override
+  public void exitUnaryOp(QueryParser.UnaryOpContext ctx) {
+    Expression expression;
+    Expression operand = expressions.get(ctx.expr());
+
+    switch (ctx.op.getType()) {
+      case QueryLexer.EXCLAMATION_MARK:
+        expression = new NotOperation(createQueryContext(ctx), operand);
+        break;
+      default:
+        throw new RuntimeException("Unexpected unary operator '" + ctx.op.getText() + "'");
+    }
+
+    expressions.put(ctx, expression);
+  }
+
+  @Override
   public void enterFunc(QueryParser.FuncContext ctx) {
 
   }
@@ -561,7 +583,7 @@ public class QueryListenerImpl implements QueryListener {
         expression = new OrOperation(createQueryContext(ctx), operand1, operand2);
         break;
       default:
-        throw new RuntimeException("Unexpected operator '" + ctx.op.getText() + "'");
+        throw new RuntimeException("Unexpected binary operator '" + ctx.op.getText() + "'");
     }
 
     expressions.put(ctx, expression);

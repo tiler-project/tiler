@@ -5,21 +5,16 @@ import io.tiler.internal.queries.EvaluationException;
 import io.tiler.internal.queries.QueryContext;
 import io.tiler.internal.queries.expressions.BinaryOperation;
 import io.tiler.internal.queries.expressions.Expression;
+import io.tiler.internal.queries.expressions.UnaryOperation;
 
-public abstract class LogicalBinaryOperation extends BinaryOperation {
-  public LogicalBinaryOperation(QueryContext queryContext, Expression operand1, Expression operand2) {
-    super(queryContext, operand1, operand2);
+public abstract class LogicalUnaryOperation extends UnaryOperation {
+  public LogicalUnaryOperation(QueryContext queryContext, Expression operand) {
+    super(queryContext, operand);
   }
 
-  protected boolean evaluateOperand1(EvaluationContext context) throws EvaluationException {
-    Object value = operand1().evaluate(context);
-    checkOperand("operand1", value);
-    return (boolean) value;
-  }
-
-  protected boolean evaluateOperand2(EvaluationContext context) throws EvaluationException {
-    Object value = operand2().evaluate(context);
-    checkOperand("operand2", value);
+  protected boolean evaluateOperand(EvaluationContext context) throws EvaluationException {
+    Object value = operand().evaluate(context);
+    checkOperand("operand", value);
     return (boolean) value;
   }
 

@@ -74,10 +74,10 @@ class LogicalBinaryOperationSpec extends Specification {
 
     where:
     operation    | operand1 | operand2 | message
-    AndOperation | ""       | true     | "operand1 must be a boolean but is actually a 'java.lang.String'"
-    AndOperation | true     | ""       | "operand2 must be a boolean but is actually a 'java.lang.String'"
-    OrOperation  | ""       | false    | "operand1 must be a boolean but is actually a 'java.lang.String'"
-    OrOperation  | false    | ""       | "operand2 must be a boolean but is actually a 'java.lang.String'"
+    AndOperation | ""       | true     | "operand1 must be a 'java.lang.Boolean' but is actually a 'java.lang.String'"
+    AndOperation | true     | ""       | "operand2 must be a 'java.lang.Boolean' but is actually a 'java.lang.String'"
+    OrOperation  | ""       | false    | "operand1 must be a 'java.lang.Boolean' but is actually a 'java.lang.String'"
+    OrOperation  | false    | ""       | "operand2 must be a 'java.lang.Boolean' but is actually a 'java.lang.String'"
   }
 
   def "it validates the operands are not null"() {
