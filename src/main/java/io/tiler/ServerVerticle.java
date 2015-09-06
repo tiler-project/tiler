@@ -27,6 +27,7 @@ import org.vertx.java.core.sockjs.SockJSServer;
 import org.vertx.java.core.sockjs.SockJSSocket;
 import org.vertx.java.platform.Verticle;
 
+import java.time.Clock;
 import java.util.*;
 
 public class ServerVerticle extends Verticle {
@@ -60,7 +61,8 @@ public class ServerVerticle extends Verticle {
             request.put("dashboardName", dashboardName);
             request.response().setContentType("text/html", "utf-8")
               .render("dashboard.shtml", next);
-          });
+          })
+          .post("/api/v1/query", this::queryMetricsMiddleware);
 
         if (!config.api().readOnly()) {
           router.post("/api/v1/metrics", this::createMetricsMiddleware);
@@ -225,8 +227,78 @@ public class ServerVerticle extends Verticle {
     });
   }
 
-  private void getMetricSearchMiddleware(YokeRequest request, Handler<Object> next) {
+  private void queryMetricsMiddleware(YokeRequest request, Handler<Object> next) {
+    Object body = request.body();
+    YokeResponse response = request.response();
 
+    if (!(body instanceof JsonObject)) {
+      sendClientError(response, "Request body needs to be a JSON object");
+      return;
+    }
+
+    JsonObject jsonBody = (JsonObject) body;
+
+    if (!jsonBody.containsField("queries")) {
+      sendClientError(response, "'queries' field missing from request body");
+      return;
+    }
+
+    Object queriesObject = jsonBody.getValue("queries");
+
+    if (!(queriesObject instanceof JsonArray)) {
+      sendClientError(response, "'queries' field should be a '" + JsonArray.class.getName() + "' but was a '" + queriesObject.getClass().getName() + "'");
+      return;
+    }
+
+    JsonArray queryObjects = (JsonArray) queriesObject;
+    ArrayList<Query> queries = new ArrayList<>();
+
+    for (Object queryObject : queryObjects) {
+      if (!(queryObject instanceof String)) {
+        sendClientError(response, "'queries' field item should be a '" + String.class.getName() + "' but was a '" + queryObject.getClass().getName() + "'");
+        return;
+      }
+
+      Query query;
+
+      try {
+        query = queryFactory.parseQuery((String) queryObject);
+      } catch (InvalidQueryException e) {
+        sendClientError(response, e.getMessage());
+        return;
+      }
+
+      queries.add(query);
+    }
+
+    getMetricsForQueries(queries, result -> {
+      if (result.failed()) {
+        sendClientError(response, "Failed to retrieve metrics. " + result.cause().getMessage());
+        return;
+      }
+
+      JsonArray metrics = result.result();
+      Clock clock = Clock.systemUTC();
+
+      JsonArray results = new JsonArray();
+
+      for (Query query : queries) {
+        JsonArray transformedMetrics;
+
+        try {
+          transformedMetrics = query.applyToMetrics(clock, metrics);
+        } catch (EvaluationException e) {
+          sendClientError(response, "Error evaluating query. " + e.getMessage());
+          return;
+        }
+
+        results.addArray(transformedMetrics);
+
+        JsonObject responseBody = new JsonObject()
+          .putArray("results", results);
+        response.setStatusCode(200).end(responseBody);
+      }
+    });
   }
 
   private SocketState createStateForSocket(JsonObject queries) {
@@ -369,7 +441,7 @@ public class ServerVerticle extends Verticle {
         JsonArray transformedMetrics = null;
 
         try {
-          transformedMetrics = query.applyToMetrics(matchingMetrics);
+          transformedMetrics = query.applyToMetrics(Clock.systemUTC(), matchingMetrics);
         } catch (EvaluationException e) {
           logger.error("Invalid query expression", e);
         }
