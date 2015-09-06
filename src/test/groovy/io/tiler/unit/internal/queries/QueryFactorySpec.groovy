@@ -12,7 +12,7 @@ import io.tiler.internal.queries.expressions.comparisons.GreaterThanOperation
 import io.tiler.internal.queries.expressions.comparisons.LessThanOperation
 import io.tiler.internal.queries.expressions.comparisons.LessThanOrEqualsOperation
 import io.tiler.internal.queries.expressions.comparisons.NotEqualsOperation
-import io.tiler.internal.queries.expressions.comparisons.RegexMatchOperation
+import io.tiler.internal.queries.expressions.comparisons.RegexFindOperation
 import io.tiler.internal.queries.expressions.constants.ConstantExpression
 import io.tiler.internal.queries.expressions.functions.ConcatFunction
 import io.tiler.internal.queries.expressions.functions.FirstFunction
@@ -188,7 +188,7 @@ class QueryFactorySpec extends Specification {
     Long.MIN_VALUE.toString()                   | Long.MIN_VALUE                 | Long
   }
 
-  def "expression with a regex match operation"() {
+  def "expression with a regex find operation"() {
     def queryText = """
       from metric.name
       where fieldName ~= /value/i
@@ -199,7 +199,7 @@ class QueryFactorySpec extends Specification {
 
     then:
     def expression = query.whereClause().expression()
-    expression instanceof RegexMatchOperation
+    expression instanceof RegexFindOperation
     expression.operand1() instanceof FieldExpression
     expression.operand1().fieldName() == "fieldName"
     expression.operand2() instanceof ConstantExpression
@@ -870,8 +870,8 @@ class QueryFactorySpec extends Specification {
     "where 1 == 2 != 3"    | NotEqualsOperation
     "where 1 != 2 == 3"    | EqualsOperation
     // Levels 5 and 6
-    "where 1 == 2 ~= /3/"  | RegexMatchOperation
-    "where 1 ~= /2/ == 3"  | RegexMatchOperation
+    "where 1 == 2 ~= /3/"  | RegexFindOperation
+    "where 1 ~= /2/ == 3"  | RegexFindOperation
     // Level 6 (only one operator in Level 6)
     // Levels 6 and 7
     "where 1 ~= /2/ && 3"  | AndOperation

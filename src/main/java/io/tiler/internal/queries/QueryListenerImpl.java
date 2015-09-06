@@ -577,7 +577,7 @@ public class QueryListenerImpl implements QueryListener {
         expression = new NotEqualsOperation(createQueryContext(ctx), operand1, operand2);
         break;
       case QueryLexer.MATCHES:
-        expression = new RegexMatchOperation(createQueryContext(ctx), operand1, operand2);
+        expression = new RegexFindOperation(createQueryContext(ctx), operand1, operand2);
         break;
       case QueryLexer.AND:
         expression = new AndOperation(createQueryContext(ctx), operand1, operand2);

@@ -8,8 +8,8 @@ import io.tiler.internal.queries.expressions.Expression;
 
 import java.util.regex.Pattern;
 
-public class RegexMatchOperation extends BinaryOperation {
-  public RegexMatchOperation(QueryContext queryContext, Expression operand1, Expression operand2) {
+public class RegexFindOperation extends BinaryOperation {
+  public RegexFindOperation(QueryContext queryContext, Expression operand1, Expression operand2) {
     super(queryContext, operand1, operand2);
   }
 

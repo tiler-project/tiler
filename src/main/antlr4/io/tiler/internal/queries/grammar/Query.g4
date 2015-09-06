@@ -23,7 +23,7 @@ expr : ID                                                                       
      | expr op=(PLUS | MINUS) expr                                                            # BinaryOp
      | expr op=(LESS_THAN | GREATER_THAN | LESS_THAN_OR_EQUALS | GREATER_THAN_OR_EQUALS) expr # BinaryOp
      | expr op=(EQUALS | NOT_EQUALS) expr                                                     # BinaryOp
-     | expr op=MATCHES expr                                                                   # BinaryOp
+     | expr op=REGEX_FIND expr                                                                # BinaryOp
      | expr op=(AND | OR) expr                                                                # BinaryOp
      | '(' expr ')'                                                                           # Parentheses
      ;
@@ -55,7 +55,7 @@ LESS_THAN_OR_EQUALS : '<=' ;
 GREATER_THAN_OR_EQUALS : '>=' ;
 EQUALS : '==' ;
 NOT_EQUALS : '!=' ;
-MATCHES : '~=' ;
+REGEX_FIND : '~=' ;
 AND : '&&' ;
 OR : '||' ;
 
