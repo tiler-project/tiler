@@ -33,6 +33,11 @@ public class AggregateClause {
   private JsonArray applyToPoints(Clock clock, JsonArray points) throws EvaluationException {
     // TODO: Maybe combine this method with the equivalent for the group clause
     HashMap<ArrayList<Object>, JsonObject> aggregatePoints = new HashMap<>();
+    HashSet<String> aggregateFieldNames = new HashSet<>();
+
+    for (Map.Entry<String, Expression> aggregateClauseEntry : namedExpressions.entrySet()) {
+      aggregateFieldNames.add(aggregateClauseEntry.getKey());
+    }
 
     for (JsonObject point : new JsonArrayIterable<JsonObject>(points)) {
       EvaluationContext context = new EvaluationContext(clock, point);
@@ -60,7 +65,7 @@ public class AggregateClause {
       }
 
       for (String pointFieldName : point.getFieldNames()) {
-        if (!aggregatePoint.containsField(pointFieldName)) {
+        if (!aggregateFieldNames.contains(pointFieldName)) {
           JsonArray aggregatePointFieldValue = aggregatePoint.getArray(pointFieldName);
 
           if (aggregatePointFieldValue == null) {
