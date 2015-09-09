@@ -507,10 +507,8 @@ public class ServerVerticle extends Verticle {
       ArrayList<String> matchingMetricNames = new ArrayList<>();
 
       for (String metricName : metricNames.result()) {
-        for (Query query : queries) {
-          if (query.fromClause().matchesMetricName(metricName)) {
-            matchingMetricNames.add(metricName);
-          }
+        if (metricNameMatchesAnyQuery(metricName, queries)) {
+          matchingMetricNames.add(metricName);
         }
       }
 
