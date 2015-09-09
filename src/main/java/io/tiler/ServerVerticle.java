@@ -293,11 +293,11 @@ public class ServerVerticle extends Verticle {
         }
 
         results.addArray(transformedMetrics);
-
-        JsonObject responseBody = new JsonObject()
-          .putArray("results", results);
-        response.setStatusCode(200).end(responseBody);
       }
+
+      JsonObject responseBody = new JsonObject()
+        .putArray("results", results);
+      response.setStatusCode(200).end(responseBody);
     });
   }
 
