@@ -17,6 +17,7 @@ import org.simondean.vertx.async.DefaultAsyncResult;
 import org.vertx.java.core.AsyncResultHandler;
 import org.vertx.java.core.Future;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.VertxException;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
@@ -287,7 +288,7 @@ public class ServerVerticle extends Verticle {
 
         try {
           transformedMetrics = query.applyToMetrics(clock, metrics);
-        } catch (EvaluationException e) {
+        } catch (EvaluationException | VertxException e) {
           sendClientError(response, "Error evaluating query. " + e.getMessage());
           return;
         }
