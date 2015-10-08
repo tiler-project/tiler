@@ -5,6 +5,7 @@ import io.tiler.internal.queries.QueryContext
 import io.tiler.internal.queries.expressions.constants.ConstantExpression
 import io.tiler.internal.queries.expressions.functions.LastFunction
 import io.tiler.unit.internal.queries.expressions.builders.EvaluationContextBuilder
+import org.vertx.java.core.json.JsonArray
 import spock.lang.Specification
 
 class LastFunctionSpec extends Specification {
@@ -13,7 +14,7 @@ class LastFunctionSpec extends Specification {
 
   def "it returns the last item in a list"() {
     given:
-    def list = ["1", "2", "3"]
+    def list = new JsonArray(["1", "2", "3"])
     def function = new LastFunction(
       queryContext,
       new ConstantExpression(queryContext, list))
@@ -36,12 +37,12 @@ class LastFunctionSpec extends Specification {
 
     then:
     def e = thrown(EvaluationException)
-    e.message == "Line 1:2\nquery\n  ^ list must evaluate to a List"
+    e.message == "Line 1:2\nquery\n  ^ list must evaluate to a JsonArray"
   }
 
   def "it validates the list is not empty"() {
     given:
-    def list = []
+    def list = new JsonArray([])
     def function = new LastFunction(
       queryContext,
       new ConstantExpression(queryContext, list))

@@ -4,6 +4,7 @@ import io.tiler.internal.queries.QueryContext
 import io.tiler.internal.queries.expressions.constants.ConstantExpression
 import io.tiler.internal.queries.expressions.functions.FirstFunction
 import io.tiler.unit.internal.queries.expressions.builders.EvaluationContextBuilder
+import org.vertx.java.core.json.JsonArray
 import spock.lang.Specification
 
 class FirstFunctionSpec extends Specification {
@@ -12,7 +13,7 @@ class FirstFunctionSpec extends Specification {
 
   def "it returns the first item in a list"() {
     given:
-    def list = ["1", "2", "3"]
+    def list = new JsonArray(["1", "2", "3"])
     def function = new FirstFunction(
       queryContext,
       new ConstantExpression(queryContext, list))
@@ -35,12 +36,12 @@ class FirstFunctionSpec extends Specification {
 
     then:
     def e = thrown(EvaluationException)
-    e.message == "Line 1:2\nquery\n  ^ list must evaluate to a List"
+    e.message == "Line 1:2\nquery\n  ^ list must evaluate to a JsonArray"
   }
 
   def "it validates the list is not empty"() {
     given:
-    def list = []
+    def list = new JsonArray([])
     def function = new FirstFunction(
       queryContext,
       new ConstantExpression(queryContext, list))

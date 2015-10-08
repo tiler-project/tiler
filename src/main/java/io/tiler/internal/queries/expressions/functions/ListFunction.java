@@ -4,11 +4,13 @@ import io.tiler.internal.queries.EvaluationException;
 import io.tiler.internal.queries.EvaluationContext;
 import io.tiler.internal.queries.QueryContext;
 import io.tiler.internal.queries.expressions.Expression;
+import org.vertx.java.core.json.JsonArray;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ListFunction<T> extends Function {
+public abstract class
+  ListFunction<T> extends Function {
   private final Expression list;
   private final Class itemClass;
 
@@ -26,23 +28,20 @@ public abstract class ListFunction<T> extends Function {
   public Object evaluate(EvaluationContext context) throws EvaluationException {
     Object list = this.list.evaluate(context);
 
-    if (!(list instanceof List<?>)) {
-      throw new EvaluationException(queryContext(), "list must evaluate to a List");
+    if (!(list instanceof JsonArray)) {
+      throw new EvaluationException(queryContext(), "list must evaluate to a JsonArray");
     }
 
-    List<?> list2 = (List<?>) list;
-    List<T> typedList = new ArrayList<>(list2.size());
+    JsonArray list2 = (JsonArray)list;
 
     for (Object item : list2) {
       if (item != null && !itemClass.isInstance(item)) {
         throw new EvaluationException(queryContext(), "Each item in list must be a '" + itemClass.getName() + "'");
       }
-
-      typedList.add((T) item);
     }
 
-    return applyToList(typedList);
+    return applyToList(list2);
   }
 
-  public abstract Object applyToList(List<T> list) throws EvaluationException;
+  public abstract Object applyToList(JsonArray list) throws EvaluationException;
 }

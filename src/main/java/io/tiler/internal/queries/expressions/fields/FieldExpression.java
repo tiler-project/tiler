@@ -20,11 +20,6 @@ public class FieldExpression extends Expression {
   @Override
   public Object evaluate(EvaluationContext context) {
     Object fieldValue = context.fields().getValue(fieldName);
-
-    if (fieldValue instanceof JsonArray) {
-      fieldValue = ((JsonArray) fieldValue).toList();
-    }
-
     return fieldValue;
   }
 }

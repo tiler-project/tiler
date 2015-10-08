@@ -7,6 +7,7 @@ import io.tiler.internal.queries.expressions.functions.MeanFunction
 import io.tiler.internal.queries.expressions.functions.MinFunction
 import io.tiler.internal.queries.expressions.functions.SumFunction
 import io.tiler.unit.internal.queries.expressions.builders.EvaluationContextBuilder
+import org.vertx.java.core.json.JsonArray
 import spock.lang.*
 
 class NumberListFunctionSpec extends Specification {
@@ -15,7 +16,7 @@ class NumberListFunctionSpec extends Specification {
 
   def "it calculates the function of a list of numbers"() {
     given:
-    def list = [2, 1, 4, 3]
+    def list = new JsonArray([2, 1, 4, 3])
     def function = functionClass.newInstance([
       queryContext,
       new ConstantExpression(queryContext, list)] as Object[])
@@ -36,7 +37,7 @@ class NumberListFunctionSpec extends Specification {
 
   def "it evaluates an empty list"() {
     given:
-    def list = []
+    def list = new JsonArray([])
     def function = functionClass.newInstance([
       queryContext,
       new ConstantExpression(queryContext, list)] as Object[])
@@ -66,7 +67,7 @@ class NumberListFunctionSpec extends Specification {
 
     then:
     def e = thrown(EvaluationException)
-    e.message == "Line 1:2\nquery\n  ^ list must evaluate to a List"
+    e.message == "Line 1:2\nquery\n  ^ list must evaluate to a JsonArray"
 
     where:
     functionClass << [MeanFunction, MinFunction, MaxFunction, SumFunction]
@@ -74,7 +75,7 @@ class NumberListFunctionSpec extends Specification {
 
   def "it validates the items in the list are numbers"() {
     given:
-    def list = ["text"]
+    def list = new JsonArray(["text"])
     def function = functionClass.newInstance([
       queryContext,
       new ConstantExpression(queryContext, list)] as Object[])

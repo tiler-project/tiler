@@ -23,10 +23,11 @@ class FieldExpressionSpec extends Specification {
     result == "fieldValue"
   }
 
-  def "it converts a JsonArray based field value to List"() {
+  def "it does not convert a JsonArray based field value to List"() {
+    def jsonArray = new JsonArray().addString("fieldValue1").addString("fieldValue2")
     given:
     def context = new EvaluationContextBuilder()
-      .field("fieldName", new JsonArray().addString("fieldValue1").addString("fieldValue2"))
+      .field("fieldName", jsonArray)
       .build()
     def expression = new FieldExpression(queryContext, "fieldName")
 
@@ -34,7 +35,10 @@ class FieldExpressionSpec extends Specification {
     def result = expression.evaluate(context)
 
     then:
-    result.class == ArrayList
-    result == ["fieldValue1", "fieldValue2"]
+    result.class == JsonArray
+    result == jsonArray
+    result.size() == 2
+    result[0] == "fieldValue1"
+    result[1] == "fieldValue2"
   }
 }
