@@ -66,7 +66,7 @@ public class FromClause {
     return false;
   }
 
-  public JsonArray findMatchingMetrics(JsonArray metrics) {
+  public JsonArray applyToMetrics(JsonArray metrics) {
     JsonArray matchingMetrics = new JsonArray();
 
     for (JsonObject metric : new JsonArrayIterable<JsonObject>(metrics)) {

@@ -421,7 +421,7 @@ public class ServerVerticle extends Verticle {
       String queryKey = queryEntry.getKey();
       Query query = queryEntry.getValue();
 
-      JsonArray matchingMetrics = query.fromClause().findMatchingMetrics(metrics);
+      JsonArray matchingMetrics = query.fromClause().applyToMetrics(metrics);
 
       if (matchingMetrics.size() > 0) {
         StringBuilder logMessageBuilder = new StringBuilder()

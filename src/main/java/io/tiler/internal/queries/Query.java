@@ -49,6 +49,10 @@ public class Query {
     return metricClauses;
   }
 
+  public boolean hasFromClause() {
+    return fromClause != null;
+  }
+
   public boolean hasWhereClause() {
     return whereClause != null;
   }
@@ -63,6 +67,10 @@ public class Query {
 
   public JsonArray applyToMetrics(Clock clock, JsonArray metrics) throws EvaluationException {
     JsonArray transformedMetrics = copyMetrics(metrics);
+
+    if (hasFromClause()) {
+      transformedMetrics = fromClause.applyToMetrics(transformedMetrics);
+    }
 
     if (hasWhereClause()) {
       whereClause.applyToMetrics(clock, transformedMetrics);
