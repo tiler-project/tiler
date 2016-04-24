@@ -185,7 +185,7 @@ third.metric
   ],
   [
     content: '''
-### Point clause',
+### Point clause
 
 The `point` clause can be used to select what fields to return for each point of the metric(s). Only field specified in the point clause will be returned in the metric(s) points.
 ''',
