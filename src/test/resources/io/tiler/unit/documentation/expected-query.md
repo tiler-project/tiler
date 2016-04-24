@@ -1,28 +1,15 @@
-package io.tiler.unit.documentation
 
-import io.tiler.internal.queries.QueryFactory
-import org.vertx.java.core.json.JsonArray
-import spock.lang.Shared
-import spock.lang.Specification
-
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-
-class QuerySpec extends Specification {
-  @Shared def documentationEntries = [
-  [
-    content: '''
 ### From clause
 
 A query starts with a from clause. In the example below, the `from` clause is followed by the name of a metric.
-''',
-    query: '''
+
+```
 from some.metric
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -36,8 +23,11 @@ from some.metric
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -51,18 +41,19 @@ from some.metric
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### From clause with regular expression
 
 The from clause can also be used with a regular expression to match multiple metrics.
-''',
-    query: '''
-from /^some\\./
-''',
-metrics: '''
+
+```
+from /^some\./
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -89,8 +80,11 @@ metrics: '''
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -109,19 +103,20 @@ metrics: '''
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### From clause with multiple expressions
 
 A comma separated list of metric names and/or regular expressions can be used with the `from` clause.
-''',
-    query: '''
-from /^some\\./,
+
+```
+from /^some\./,
 third.metric
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -148,8 +143,11 @@ third.metric
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -176,19 +174,20 @@ third.metric
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Point clause',
 
 The `point` clause can be used to select what fields to return for each point of the metric(s). Only field specified in the point clause will be returned in the metric(s) points.
-''',
-    query: '''
+
+```
 from some.metric
 point time, value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -206,8 +205,11 @@ point time, value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -223,19 +225,20 @@ point time, value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Point clause with aliases
 
 Aliases can be specified for fields in the `point` clause, which causes the fields to be returned with alternative names.
-''',
-    query: '''
+
+```
 from some.metric
 point time, value as another.name
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -251,8 +254,11 @@ point time, value as another.name
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -268,19 +274,20 @@ point time, value as another.name
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Metric clause
 
 The `metric` clause can be used to select the fields on the metric(s) to return.
-''',
-    query: '''
+
+```
 from some.metric
 metric name, another.field
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -296,8 +303,11 @@ metric name, another.field
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -312,19 +322,20 @@ metric name, another.field
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Where clause
 
 The `where` clause filters the points that are returned.
-''',
-    query: '''
+
+```
 from some.metric
 where value == 'B'
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -338,8 +349,11 @@ where value == 'B'
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -350,20 +364,21 @@ where value == 'B'
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Sorting points
 
 The `sort` clause sorts the points of each that is returned.  When sorting points, the sort clause must be used together with a point clause.
-''',
-    query: '''
+
+```
 from some.metric
 point value, time
 sort time
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -383,8 +398,11 @@ sort time
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -404,20 +422,21 @@ sort time
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Sort ascending and descending
 
 A sort can be based on multiple fields and fields can be sorted in ascending and descending order.
-''',
-    query: '''
+
+```
 from some.metric
 point value, time
 sort time desc, value asc
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -441,8 +460,11 @@ sort time desc, value asc
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -466,20 +488,21 @@ sort time desc, value asc
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Sorting metrics
 
 Metrics can also be sorted. In this case, the `sort` clause needs to be used together with the metric clause.
-''',
-    query: '''
+
+```
 from /.*/
 metric name, another.field
 sort another.field
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -500,8 +523,11 @@ sort another.field
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "another.metric",
@@ -522,19 +548,20 @@ sort another.field
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Group clause
 
 The `group` clause can be used to merge the points from multiple metrics. The group clause is used with a list of point fields, which is used to group related pointed together under new metrics. For the point fields specified, points that have the same field values will be placed in the same new metric and points with different point values will be placed in different new metrics. Any fields used to group points will also be copied to the new metrics as metric fields - see the `ocean` field on the new metrics in the example output below.
-''',
-    query: '''
+
+```
 from /.*/
 group ocean
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -563,8 +590,11 @@ group ocean
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "ocean": "Pacific",
@@ -593,22 +623,23 @@ group ocean
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Aggregate clause
 
 The `aggregate` clause can be used to combine the points of a metric. The clause is typically used with an aggregate function like `interval`.
 When the aggregation expression is evaluated, points that evaluate to the same value are combined into a single point.
 In the example below, points are placed into 10 second buckets.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate interval(time, 0, 10s) as time
 point time, sum(value) as total
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -632,8 +663,11 @@ point time, sum(value) as total
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -649,10 +683,8 @@ point time, sum(value) as total
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Comparison operators
 
 The following comparison operators are supported:
@@ -668,12 +700,15 @@ The following comparison operators are supported:
 | ~=       | Regex find             |
 
 Comparison operators, like all operators, constants and most functions, can be used in the `where`, `point`, `metric`, `group` and `aggregate` clauses.
-''',
-    query: '''
+
+```
 from some.metric
 where value > 2
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -693,8 +728,11 @@ where value > 2
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -708,19 +746,20 @@ where value > 2
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Regex find operator
 
 The `regex find` operator Evaluates to true if the regular expression on the right can be found within the expression on the right.
-''',
-    query: '''
+
+```
 from some.metric
 where value ~= /World/
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -740,8 +779,11 @@ where value ~= /World/
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -755,10 +797,8 @@ where value ~= /World/
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Boolean operators
 
 The following boolean operators are supported:
@@ -770,12 +810,15 @@ The following boolean operators are supported:
 | !        | Logical `not` |
 
 Boolean operators, like all operators and constants, can be used in the `where`, `point`, `metric`, `group` and `aggregate` clauses.
-''',
-    query: '''
+
+```
 from some.metric
 where value > 2 && !active
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -799,8 +842,11 @@ where value > 2 && !active
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -812,10 +858,8 @@ where value > 2 && !active
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Functions
 
 The following functions are supported:
@@ -836,12 +880,15 @@ The following functions are supported:
 ### concat function
 
 The `concat` function concatenates strings.
-''',
-    query: '''
+
+```
 from some.metric
 point concat(a, b) as c
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -853,8 +900,11 @@ point concat(a, b) as c
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -865,20 +915,21 @@ point concat(a, b) as c
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### first function
 
 The `first` function is typically used with the aggregate clause, to select the first value of a field.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate ocean
 point ocean, first(value) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -902,8 +953,11 @@ point ocean, first(value) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -919,20 +973,21 @@ point ocean, first(value) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### last function
 
 The `last` function is also used with the aggregate clause and selects the last value of a merged field.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate ocean
 point ocean, last(value) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -956,8 +1011,11 @@ point ocean, last(value) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -973,20 +1031,21 @@ point ocean, last(value) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### max function
 
 The `max` function can be used with the aggregate clause to select the field value with the highest numerical value.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate ocean
 point ocean, max(value) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1010,8 +1069,11 @@ point ocean, max(value) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1027,20 +1089,21 @@ point ocean, max(value) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### min function
 
 The `min` function can be used with the aggregate clause to select the field value with the lowest numerical value.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate ocean
 point ocean, min(value) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1064,8 +1127,11 @@ point ocean, min(value) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1081,20 +1147,21 @@ point ocean, min(value) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### mean function
 
 The `mean` function can be used with the aggregate clause to calculate the numerical mean of field values being merged.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate ocean
 point ocean, mean(value) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1118,8 +1185,11 @@ point ocean, mean(value) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1135,20 +1205,21 @@ point ocean, mean(value) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### sum function
 
 The `sum` function can be used with the aggregate clause to calculate the numerical sum of field values being merged.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate ocean
 point ocean, sum(value) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1172,8 +1243,11 @@ point ocean, sum(value) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1189,21 +1263,22 @@ point ocean, sum(value) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### now function
 
 The `now` function returns the number of microseconds since 00:00 on 1 January 1970.
 It is often used with the where clause to filter points to a certain time frame, relative to the current date time.
 In the following example, the "current date time" is 2010-01-01T00:00Z.
-''',
-    query: '''
+
+```
 from some.metric
 where time >= now()
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1223,8 +1298,11 @@ where time >= now()
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1240,10 +1318,8 @@ where time >= now()
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### replace function
 
 The `replace` function performs a regular expression based replacement on a string based value.
@@ -1254,12 +1330,15 @@ The function has the following parameters:
 | value       | field or other value                                                                                                                                                                            |
 | regex       | Regular expression to search for in the `value`                                                                                                                                                 |
 | replacement | The replacement string works the same as the argument in Java's Matcher.replaceAll function https://docs.oracle.com/javase/8/docs/api/java/util/regex/Matcher.html#replaceAll-java.lang.String- |
-''',
-    query: '''
+
+```
 from some.metric
 point replace(value, /Hello ([a-z]+)/i, "Goodbye $1") as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1273,8 +1352,11 @@ point replace(value, /Hello ([a-z]+)/i, "Goodbye $1") as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1288,10 +1370,8 @@ point replace(value, /Hello ([a-z]+)/i, "Goodbye $1") as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### substring function
 
 The `substring` function returns a substring of the specified value.
@@ -1302,12 +1382,15 @@ The function has the following parameters:
 | value      | field or other value                          |
 | beginIndex | The starting index of the substring to return |
 | endIndex   | The ending index of the substring to return   |
-''',
-    query: '''
+
+```
 from some.metric
 point substring(value, 6, 11) as value
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1318,8 +1401,11 @@ point substring(value, 6, 11) as value
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1330,10 +1416,8 @@ point substring(value, 6, 11) as value
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Aggregations
 
 The following aggregations are supported:
@@ -1346,12 +1430,15 @@ The following aggregations are supported:
 ### all function
 
 The `all` function can be used with the aggregate clause to merge all points into a single point.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate all() as some.field
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1365,8 +1452,11 @@ aggregate all() as some.field
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1378,19 +1468,20 @@ aggregate all() as some.field
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### interval function
 
 The `interval` function can be used with the aggregate clause to place points into buckets of values. It can be useful to divide points into buckets of time.
-''',
-    query: '''
+
+```
 from some.metric
 aggregate interval(time, 0, 10s) as time
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1414,8 +1505,11 @@ aggregate interval(time, 0, 10s) as time
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1431,10 +1525,8 @@ aggregate interval(time, 0, 10s) as time
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Arithmetic Operators
 
 The following arithmetic operators are supported:
@@ -1445,15 +1537,18 @@ The following arithmetic operators are supported:
 | /        | Divide   |
 | +        | Add      |
 | -        | Subtract |
-''',
-    query: '''
+
+```
 from some.metric
 point value * 2 as multiplication,
 value / 2 as division,
 value + 2 as addition,
 value - 2 as subtraction
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1464,8 +1559,11 @@ value - 2 as subtraction
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1479,10 +1577,8 @@ value - 2 as subtraction
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Constants
 
 The following arithmetic operators are supported:
@@ -1496,12 +1592,15 @@ The following arithmetic operators are supported:
 | Regex pattern | /pattern/ |
 
 ### Boolean constants
-''',
-    query: '''
+
+```
 from some.metric
 where value == true
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1515,8 +1614,11 @@ where value == true
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1527,17 +1629,18 @@ where value == true
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Integer constants
-''',
-    query: '''
+
+```
 from some.metric
 where value > 1
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1551,8 +1654,11 @@ where value > 1
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1563,17 +1669,18 @@ where value > 1
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### String constants
-''',
-    query: '''
+
+```
 from some.metric
 where value == "b"
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1587,8 +1694,11 @@ where value == "b"
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1599,10 +1709,8 @@ where value == "b"
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Time period constants
 
 A time period can included in a query by adding one of the following letters to the end up a number:
@@ -1617,12 +1725,15 @@ A time period can included in a query by adding one of the following letters to 
 | w      | Weeks        |
 
 `10s` would represent 10 seconds. `1w` would represent 1 week.
-''',
-    query: '''
+
+```
 from some.metric
 where time > 1u
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1636,8 +1747,11 @@ where time > 1u
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1648,10 +1762,8 @@ where time > 1u
     ]
   }
 ]
-'''
-  ],
-  [
-    content: '''
+```
+
 ### Regex patterns
 
 A regex pattern can be included in a query using the syntax `/pattern/`.  Regex patterns have
@@ -1669,12 +1781,15 @@ pattern.  E.g. /pattern/i would make the regex pattern case-insensitive.
 | s      | Dotall                  | https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#DOTALL                  |
 | u      | Unicode case            | https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CASE            |
 | U      | Unicode character class | https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CHARACTER_CLASS |
-''',
-    query: '''
+
+```
 from some.metric
 where value ~= /fic/
-''',
-    metrics: '''
+```
+
+Example metrics:
+
+```
 [
   {
     "name": "some.metric",
@@ -1688,8 +1803,11 @@ where value ~= /fic/
     ]
   }
 ]
-''',
-    expectedOutput: '''
+```
+
+Output of query:
+
+```
 [
   {
     "name": "some.metric",
@@ -1700,74 +1818,4 @@ where value ~= /fic/
     ]
   }
 ]
-'''
-  ]
-]
-
-  @Shared def expectedMarkdown = this.getClass().getResource('/io/tiler/unit/documentation/expected-query.md').text
-
-  def normaliseJsonArrayString(String jsonArrayString) {
-    new JsonArray(jsonArrayString).encode()
-  }
-
-  def evaluateQuery(queryString, metricsString) {
-    def queryFactory = new QueryFactory()
-    def query = queryFactory.parseQuery(queryString)
-
-    def clock = Clock.fixed(ZonedDateTime.of(2010, 01, 01, 0, 0, 0, 0, ZoneId.of("Z")).toInstant(), ZoneId.of("Z"))
-    def metrics = new JsonArray(metricsString)
-
-    def actualOutput = query.applyToMetrics(clock, metrics)
-
-    return actualOutput.encode()
-  }
-
-  def generateMarkdown(documentationEntries) {
-    def builder = new StringBuilder()
-
-    documentationEntries.each { entry ->
-      builder
-        .append(entry.content)
-        .append('\n')
-        .append('```')
-        .append(entry.query)
-        .append('```\n')
-        .append('\n')
-        .append("Example metric${entry.metrics.length() > 1 ? 's' : ''}:\n")
-        .append('\n')
-        .append('```')
-        .append(entry.metrics)
-        .append('```\n')
-        .append('\n')
-        .append("Output of query:\n")
-        .append('\n')
-        .append('```')
-        .append(entry.expectedOutput)
-        .append('```\n')
-    }
-
-    return builder.toString()
-  }
-
-  def "documentation examples should generate the expected output"() {
-    given:
-    def expectedOutput = normaliseJsonArrayString(entry.expectedOutput)
-
-    when:
-    def actualOutput = evaluateQuery(entry.query, entry.metrics)
-
-    then:
-    actualOutput == expectedOutput
-
-    where:
-    entry << documentationEntries
-  }
-
-  def "documentation entries should generate expected markdown"() {
-    when:
-    def actualMarkdown = generateMarkdown(documentationEntries)
-
-    then:
-    actualMarkdown == expectedMarkdown
-  }
-}
+```

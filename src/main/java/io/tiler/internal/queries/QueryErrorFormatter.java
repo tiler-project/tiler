@@ -33,10 +33,12 @@ public class QueryErrorFormatter {
   private static void formatError(StringBuilder builder, String[] lines, QueryError error) {
     int line = error.line();
     int column = error.column();
+    String lineText = line <= lines.length ? lines[line - 1] : "";
+
     builder
       .append("Line " + line + ":" + column)
       .append(System.lineSeparator())
-      .append(lines[line - 1])
+      .append(lineText)
       .append(System.lineSeparator())
       .append(StringUtils.repeat(' ', column))
       .append("^ ")
