@@ -15,6 +15,11 @@ class QuerySpec extends Specification {
   @Shared def documentationEntries = [
   [
     content: '''
+## Query Language
+
+Tiler includes its own custom query language.  The language is loosely based on SQL, though some of its syntax is more
+similar to C based languages like Java than they are to SQL.
+
 ### From clause
 
 A query starts with a from clause. In the example below, the `from` clause is followed by the name of a metric.
