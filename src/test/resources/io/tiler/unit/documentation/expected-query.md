@@ -14,7 +14,7 @@ from some.metric
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -32,7 +32,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -58,7 +58,7 @@ from /^some\./
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -89,7 +89,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -121,7 +121,7 @@ third.metric
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -152,7 +152,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -192,7 +192,7 @@ point time, value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -214,7 +214,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -243,7 +243,7 @@ point time, value as another.name
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -263,7 +263,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -292,7 +292,7 @@ metric name, another.field
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -312,7 +312,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -340,7 +340,7 @@ where value == 'B'
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -358,7 +358,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -383,7 +383,7 @@ sort time
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -407,7 +407,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -441,7 +441,7 @@ sort time desc, value asc
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -469,7 +469,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -507,7 +507,7 @@ sort another.field
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -532,7 +532,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "another.metric",
@@ -566,7 +566,7 @@ group ocean
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -599,7 +599,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "ocean": "Pacific",
@@ -644,7 +644,7 @@ point time, sum(value) as total
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -672,7 +672,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -713,7 +713,7 @@ where value > 2
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -737,7 +737,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -764,7 +764,7 @@ where value ~= /World/
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -788,7 +788,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -823,7 +823,7 @@ where value > 2 && !active
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -851,7 +851,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -893,7 +893,7 @@ point concat(a, b) as c
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -909,7 +909,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -934,7 +934,7 @@ point ocean, first(value) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -962,7 +962,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -992,7 +992,7 @@ point ocean, last(value) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1020,7 +1020,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1050,7 +1050,7 @@ point ocean, max(value) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1078,7 +1078,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1108,7 +1108,7 @@ point ocean, min(value) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1136,7 +1136,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1166,7 +1166,7 @@ point ocean, mean(value) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1194,7 +1194,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1224,7 +1224,7 @@ point ocean, sum(value) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1252,7 +1252,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1283,7 +1283,7 @@ where time >= now()
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1307,7 +1307,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1343,7 +1343,7 @@ point replace(value, /Hello ([a-z]+)/i, "Goodbye $1") as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1361,7 +1361,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1395,7 +1395,7 @@ point substring(value, 6, 11) as value
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1410,7 +1410,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1443,7 +1443,7 @@ aggregate all() as some.field
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1461,7 +1461,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1486,7 +1486,7 @@ aggregate interval(time, 0, 10s) as time
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1514,7 +1514,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1553,7 +1553,7 @@ value - 2 as subtraction
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1568,7 +1568,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1605,7 +1605,7 @@ where value == true
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1623,7 +1623,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1645,7 +1645,7 @@ where value > 1
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1663,7 +1663,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1685,7 +1685,7 @@ where value == "b"
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1703,7 +1703,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1738,7 +1738,7 @@ where time > 1u
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1756,7 +1756,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1794,7 +1794,7 @@ where value ~= /fic/
 
 Example metrics:
 
-```
+``` json
 [
   {
     "name": "some.metric",
@@ -1812,7 +1812,7 @@ Example metrics:
 
 Output of query:
 
-```
+``` json
 [
   {
     "name": "some.metric",
