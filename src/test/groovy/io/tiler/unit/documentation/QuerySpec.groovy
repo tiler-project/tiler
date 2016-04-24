@@ -55,7 +55,7 @@ from some.metric
   ],
   [
     content: '''
-### From clause with regular expression
+#### From clause with regular expression
 
 The from clause can also be used with a regular expression to match multiple metrics.
 ''',
@@ -113,7 +113,7 @@ metrics: '''
   ],
   [
     content: '''
-### From clause with multiple expressions
+#### From clause with multiple expressions
 
 A comma separated list of metric names and/or regular expressions can be used with the `from` clause.
 ''',
@@ -227,7 +227,7 @@ point time, value
   ],
   [
     content: '''
-### Point clause with aliases
+#### Point clause with aliases
 
 Aliases can be specified for fields in the `point` clause, which causes the fields to be returned with alternative names.
 ''',
@@ -408,7 +408,7 @@ sort time
   ],
   [
     content: '''
-### Sort ascending and descending
+#### Sort ascending and descending
 
 A sort can be based on multiple fields and fields can be sorted in ascending and descending order.
 ''',
@@ -712,7 +712,7 @@ where value > 2
   ],
   [
     content: '''
-### Regex find operator
+#### Regex find operator
 
 The `regex find` operator Evaluates to true if the regular expression on the right can be found within the expression on the right.
 ''',
@@ -833,7 +833,7 @@ The following functions are supported:
 | replace   |
 | substring |
 
-### concat function
+#### concat function
 
 The `concat` function concatenates strings.
 ''',
@@ -869,7 +869,7 @@ point concat(a, b) as c
   ],
   [
     content: '''
-### first function
+#### first function
 
 The `first` function is typically used with the aggregate clause, to select the first value of a field.
 ''',
@@ -923,7 +923,7 @@ point ocean, first(value) as value
   ],
   [
     content: '''
-### last function
+#### last function
 
 The `last` function is also used with the aggregate clause and selects the last value of a merged field.
 ''',
@@ -977,7 +977,7 @@ point ocean, last(value) as value
   ],
   [
     content: '''
-### max function
+#### max function
 
 The `max` function can be used with the aggregate clause to select the field value with the highest numerical value.
 ''',
@@ -1031,7 +1031,7 @@ point ocean, max(value) as value
   ],
   [
     content: '''
-### min function
+#### min function
 
 The `min` function can be used with the aggregate clause to select the field value with the lowest numerical value.
 ''',
@@ -1085,7 +1085,7 @@ point ocean, min(value) as value
   ],
   [
     content: '''
-### mean function
+#### mean function
 
 The `mean` function can be used with the aggregate clause to calculate the numerical mean of field values being merged.
 ''',
@@ -1139,7 +1139,7 @@ point ocean, mean(value) as value
   ],
   [
     content: '''
-### sum function
+#### sum function
 
 The `sum` function can be used with the aggregate clause to calculate the numerical sum of field values being merged.
 ''',
@@ -1193,7 +1193,7 @@ point ocean, sum(value) as value
   ],
   [
     content: '''
-### now function
+#### now function
 
 The `now` function returns the number of microseconds since 00:00 on 1 January 1970.
 It is often used with the where clause to filter points to a certain time frame, relative to the current date time.
@@ -1244,7 +1244,7 @@ where time >= now()
   ],
   [
     content: '''
-### replace function
+#### replace function
 
 The `replace` function performs a regular expression based replacement on a string based value.
 The function has the following parameters:
@@ -1292,7 +1292,7 @@ point replace(value, /Hello ([a-z]+)/i, "Goodbye $1") as value
   ],
   [
     content: '''
-### substring function
+#### substring function
 
 The `substring` function returns a substring of the specified value.
 The function has the following parameters:
@@ -1343,7 +1343,7 @@ The following aggregations are supported:
 | all      |
 | interval |
 
-### all function
+#### all function
 
 The `all` function can be used with the aggregate clause to merge all points into a single point.
 ''',
@@ -1382,7 +1382,7 @@ aggregate all() as some.field
   ],
   [
     content: '''
-### interval function
+#### interval function
 
 The `interval` function can be used with the aggregate clause to place points into buckets of values. It can be useful to divide points into buckets of time.
 ''',
@@ -1495,7 +1495,7 @@ The following arithmetic operators are supported:
 | Time period   | 1s        |
 | Regex pattern | /pattern/ |
 
-### Boolean constants
+#### Boolean constants
 ''',
     query: '''
 from some.metric
@@ -1531,7 +1531,7 @@ where value == true
   ],
   [
     content: '''
-### Integer constants
+#### Integer constants
 ''',
     query: '''
 from some.metric
@@ -1567,7 +1567,7 @@ where value > 1
   ],
   [
     content: '''
-### String constants
+#### String constants
 ''',
     query: '''
 from some.metric
@@ -1603,7 +1603,7 @@ where value == "b"
   ],
   [
     content: '''
-### Time period constants
+#### Time period constants
 
 A time period can included in a query by adding one of the following letters to the end up a number:
 
@@ -1652,7 +1652,7 @@ where time > 1u
   ],
   [
     content: '''
-### Regex patterns
+#### Regex patterns
 
 A regex pattern can be included in a query using the syntax `/pattern/`.  Regex patterns have
 the same syntax as [Java regex patterns](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html).

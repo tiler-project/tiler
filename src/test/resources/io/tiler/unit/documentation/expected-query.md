@@ -43,7 +43,7 @@ Output of query:
 ]
 ```
 
-### From clause with regular expression
+#### From clause with regular expression
 
 The from clause can also be used with a regular expression to match multiple metrics.
 
@@ -105,7 +105,7 @@ Output of query:
 ]
 ```
 
-### From clause with multiple expressions
+#### From clause with multiple expressions
 
 A comma separated list of metric names and/or regular expressions can be used with the `from` clause.
 
@@ -227,7 +227,7 @@ Output of query:
 ]
 ```
 
-### Point clause with aliases
+#### Point clause with aliases
 
 Aliases can be specified for fields in the `point` clause, which causes the fields to be returned with alternative names.
 
@@ -424,7 +424,7 @@ Output of query:
 ]
 ```
 
-### Sort ascending and descending
+#### Sort ascending and descending
 
 A sort can be based on multiple fields and fields can be sorted in ascending and descending order.
 
@@ -748,7 +748,7 @@ Output of query:
 ]
 ```
 
-### Regex find operator
+#### Regex find operator
 
 The `regex find` operator Evaluates to true if the regular expression on the right can be found within the expression on the right.
 
@@ -877,7 +877,7 @@ The following functions are supported:
 | replace   |
 | substring |
 
-### concat function
+#### concat function
 
 The `concat` function concatenates strings.
 
@@ -917,7 +917,7 @@ Output of query:
 ]
 ```
 
-### first function
+#### first function
 
 The `first` function is typically used with the aggregate clause, to select the first value of a field.
 
@@ -975,7 +975,7 @@ Output of query:
 ]
 ```
 
-### last function
+#### last function
 
 The `last` function is also used with the aggregate clause and selects the last value of a merged field.
 
@@ -1033,7 +1033,7 @@ Output of query:
 ]
 ```
 
-### max function
+#### max function
 
 The `max` function can be used with the aggregate clause to select the field value with the highest numerical value.
 
@@ -1091,7 +1091,7 @@ Output of query:
 ]
 ```
 
-### min function
+#### min function
 
 The `min` function can be used with the aggregate clause to select the field value with the lowest numerical value.
 
@@ -1149,7 +1149,7 @@ Output of query:
 ]
 ```
 
-### mean function
+#### mean function
 
 The `mean` function can be used with the aggregate clause to calculate the numerical mean of field values being merged.
 
@@ -1207,7 +1207,7 @@ Output of query:
 ]
 ```
 
-### sum function
+#### sum function
 
 The `sum` function can be used with the aggregate clause to calculate the numerical sum of field values being merged.
 
@@ -1265,7 +1265,7 @@ Output of query:
 ]
 ```
 
-### now function
+#### now function
 
 The `now` function returns the number of microseconds since 00:00 on 1 January 1970.
 It is often used with the where clause to filter points to a certain time frame, relative to the current date time.
@@ -1320,7 +1320,7 @@ Output of query:
 ]
 ```
 
-### replace function
+#### replace function
 
 The `replace` function performs a regular expression based replacement on a string based value.
 The function has the following parameters:
@@ -1372,7 +1372,7 @@ Output of query:
 ]
 ```
 
-### substring function
+#### substring function
 
 The `substring` function returns a substring of the specified value.
 The function has the following parameters:
@@ -1427,7 +1427,7 @@ The following aggregations are supported:
 | all      |
 | interval |
 
-### all function
+#### all function
 
 The `all` function can be used with the aggregate clause to merge all points into a single point.
 
@@ -1470,7 +1470,7 @@ Output of query:
 ]
 ```
 
-### interval function
+#### interval function
 
 The `interval` function can be used with the aggregate clause to place points into buckets of values. It can be useful to divide points into buckets of time.
 
@@ -1591,7 +1591,7 @@ The following arithmetic operators are supported:
 | Time period   | 1s        |
 | Regex pattern | /pattern/ |
 
-### Boolean constants
+#### Boolean constants
 
 ```
 from some.metric
@@ -1631,7 +1631,7 @@ Output of query:
 ]
 ```
 
-### Integer constants
+#### Integer constants
 
 ```
 from some.metric
@@ -1671,7 +1671,7 @@ Output of query:
 ]
 ```
 
-### String constants
+#### String constants
 
 ```
 from some.metric
@@ -1711,7 +1711,7 @@ Output of query:
 ]
 ```
 
-### Time period constants
+#### Time period constants
 
 A time period can included in a query by adding one of the following letters to the end up a number:
 
@@ -1764,7 +1764,7 @@ Output of query:
 ]
 ```
 
-### Regex patterns
+#### Regex patterns
 
 A regex pattern can be included in a query using the syntax `/pattern/`.  Regex patterns have
 the same syntax as [Java regex patterns](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html).
